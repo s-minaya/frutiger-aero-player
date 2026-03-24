@@ -1,27 +1,28 @@
+@use 'variables' as *;
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+html, body, #root {
+  height: 100%;
+  font-family: $xp-font;
+}
+
+// ─── Variables CSS globales ───────────────
 :root {
-  font-family: "Roboto", Arial, Helvetica, sans-serif;
-}
-
-body {
-  background-color: #555;
-  color: #fff;
-}
-
-.header {
-  border-bottom: solid 5px darkcyan;
-
-  .title {
-    line-height: 4rem;
-    padding-inline: 2rem;
-  }
-}
-
-.main {
-  padding: 2rem;
+  --bliss:                url('../images/bliss.jpg');
+  --xp-taskbar-height:    #{$xp-taskbar-height};
+  --xp-taskbar-top:       #{$xp-taskbar-top};
+  --xp-taskbar-bottom:    #{$xp-taskbar-bottom};
+  --xp-taskbar-shine:     #{$xp-taskbar-shine};
+  --xp-start-top:         #{$xp-start-top};
+  --xp-start-bottom:      #{$xp-start-bottom};
+  --xp-tray-bg:           #{$xp-tray-bg};
+  --xp-window-border:     #{$xp-window-border};
+  --xp-font:              #{$xp-font};
+  --xp-text-icon:         #{$xp-text-icon};
+  --xp-text-shadow:       #{$xp-text-shadow};
 }

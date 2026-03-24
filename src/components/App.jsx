@@ -1,14 +1,27 @@
-import "../styles/App.scss";
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { isLoggedIn } from '../auth/tokenManager.js'
+import Desktop from './Desktop.jsx'
 
-function App() {
-  return (
-    <div>
-      <header className="header">
-        <h1 className="title">Plantilla React</h1>
-      </header>
-      <main className="main">Holis Adalabers!!!</main>
-    </div>
-  );
+function PrivateRoute({ children }) {
+  return isLoggedIn() ? children : <Navigate to="/login" replace />
 }
 
-export default App;
+export default function App() {
+  return (
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
+      <Routes>
+        <Route path="/login" element={<Desktop />} />
+        <Route path="/callback" element={<div>Cargando...</div>} />
+        <Route
+          path="/"
+          element={
+            <PrivateRoute>
+              <div>Home — próximamente</div>
+            </PrivateRoute>
+          }
+        />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </BrowserRouter>
+  )
+}
