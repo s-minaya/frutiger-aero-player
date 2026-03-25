@@ -13,7 +13,7 @@ import iconSpaceChannel from "../images/space-channel-5.PNG";
 import iconNotepad from "../images/notepad.png";
 import iconWMP from "../images/wmp.webp";
 
-export default function Desktop() {
+export default function Desktop ({ onShutdown }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [playerOpen, setPlayerOpen] = useState(false);
   const { user, logout, reload } = useAuth();
@@ -84,7 +84,7 @@ export default function Desktop() {
                 setPlayerOpen(true);
                 setMenuOpen(false);
               }}
-              onLogout={logout}
+              onLogout={onShutdown}
               onLogin={() => loginWithSpotifyPopup(() => reload())}
               user={user}
             />
