@@ -1,0 +1,239 @@
+@use "../styles/variables" as *;
+
+$_border-gradient: linear-gradient(
+  to right,
+  transparent,
+  $xp-login-divider 20%,
+  $xp-login-divider 80%,
+  transparent
+);
+
+.login-screen {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: $xp-login-bg;
+  font-family: $xp-font;
+  color: $xp-login-text;
+
+  &__top-bar {
+  height: 8rem;
+  background: $xp-login-bar;
+  flex-shrink: 0;
+  position: relative; 
+
+  // Borde inferior con degradado
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 0.2rem;
+    background: $_border-gradient;
+  }
+
+}
+
+ &__body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  position: relative; 
+
+  // Brillo esquina superior izquierda del cuerpo
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 45%;
+    height: 60%;
+    background: radial-gradient(
+      ellipse at top left,
+      rgba(255, 255, 255, 0.55) 0%,
+      rgba(255, 255, 255, 0.15) 40%,
+      transparent 70%
+    );
+    pointer-events: none;
+  }
+}
+
+  &__left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    padding: 1.6rem;
+  }
+
+  &__logo {
+    width: 14rem;
+    height: auto;
+  }
+
+  &__hint {
+    font-size: 1.2rem;
+    text-align: center;
+    text-shadow: $xp-text-shadow;
+    opacity: 0.9;
+  }
+
+&__divider {
+  width: 0.1rem;
+  height: 95%;
+  flex-shrink: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(255, 255, 255, 0.2) 15%,
+    $xp-login-divider 35%,
+    $xp-login-divider 65%,
+    rgba(255, 255, 255, 0.2) 85%,
+    transparent 100%
+  );
+}
+
+  &__right {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.6rem;
+  }
+
+  &__user {
+    display: flex;
+    align-items: flex-start; 
+    gap: 1.2rem;
+    cursor: pointer;
+    padding: 1rem;
+    border-radius: 0.4rem;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+  }
+
+  &__avatar {
+    width: 5.6rem;
+    height: 5.6rem;
+    object-fit: cover;
+    border: 0.2rem solid rgba(255, 255, 255, 0.6);
+    flex-shrink: 0;
+  }
+
+  &__username {
+    font-size: 1.4rem;
+    text-shadow: $xp-text-shadow;
+    padding-top: 0.4rem; 
+  }
+
+&__footer {
+  height: 8rem;
+  background: $xp-login-bar;
+  display: flex;
+  align-items: center;
+  padding: 0 2rem;
+  flex-shrink: 0;
+  position: relative; 
+
+  // Borde superior con degradado
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 0.2rem;
+    background: $_border-gradient;
+  }
+}
+
+  &__shutdown {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    background: none;
+    border: none;
+    color: $xp-login-text;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0.6rem 1rem;
+    border-radius: 0.4rem;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+  }
+
+  &__shutdown-icon {
+    width: 2.4rem;
+    height: 2.4rem;
+    object-fit: contain;
+  }
+}
+
+// ─── Media queries ────────────────────────────────────────
+@media (min-width: $bp-md) {
+  .login-screen {
+    &__top-bar {
+      height: 10rem;
+    }
+
+    &__logo {
+      width: 22rem;
+    }
+
+    &__hint {
+      font-size: 1.6rem;
+    }
+
+    &__avatar {
+      width: 8rem;
+      height: 8rem;
+    }
+
+    &__username {
+      font-size: 2rem;
+      padding-top: 0.6rem;
+    }
+
+    &__footer {
+      height: 10rem;
+    }
+
+    &__shutdown {
+      font-size: 1.6rem;
+    }
+
+    &__shutdown-icon {
+      width: 3.2rem;
+      height: 3.2rem;
+    }
+  }
+}
+
+@media (min-width: $bp-lg) {
+  .login-screen {
+    &__logo {
+      width: 28rem;
+    }
+    &__shutdown{
+        font-size: 2rem;
+    }
+
+    &__hint {
+      font-size: 2.5rem;
+      font-weight: 600;
+    }
+
+    &__username {
+      font-size: 2.4rem;
+    }
+  }
+}
