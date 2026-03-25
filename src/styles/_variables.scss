@@ -3,13 +3,21 @@
 // Taskbar
 $xp-taskbar-top:     #245edb;
 $xp-taskbar-bottom:  #1941a5;
-$xp-taskbar-shine:   #4b88f8;
-$xp-taskbar-height:  40px;
+$xp-taskbar-shine:   rgba(255, 255, 255, 0.3); 
+$xp-taskbar-height:  4rem;
 
 // Start button
 $xp-start-top:       #57a818;
 $xp-start-bottom:    #3c7a0e;
-$xp-start-shine:     #78cc28;
+
+// Start menu
+$xp-menu-header-top:    #1740a8;
+$xp-menu-header-bottom: #3b6fd4;
+$xp-menu-body-bg:       #ffffff;
+$xp-menu-body-right:    #d8e4f8;
+$xp-menu-footer-bg:     #1740a8;
+$xp-menu-hover:         #316ac5;
+$xp-menu-width:         38rem;
 
 // Ventana
 $xp-window-title-left:  #0a58c8;
@@ -25,3 +33,10 @@ $xp-text-icon:       #ffffff;
 $xp-text-shadow:     1px 1px 2px rgba(0, 0, 0, 0.8);
 
 // ── FRUTIGER AERO PLAYER ──────────────────────────────────
+
+
+// ── Breakpoints ───────────────────────────────────────────
+$bp-sm:   480px;
+$bp-md:   768px;
+$bp-lg:  1024px;
+$bp-xl:  1440px;

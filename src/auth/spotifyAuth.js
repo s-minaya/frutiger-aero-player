@@ -1,5 +1,3 @@
-// Construye la URL de autorización y lanza el flujo PKCE
-
 import { generateCodeVerifier, generateCodeChallenge } from "./pkce.js";
 import { saveCodeVerifier, clearTokens } from "./tokenManager.js";
 
@@ -7,20 +5,12 @@ const CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
 const REDIRECT_URI = import.meta.env.VITE_REDIRECT_URI;
 const AUTH_ENDPOINT = "https://accounts.spotify.com/authorize";
 
-// Scopes mínimos para la Fase 1:
-// - user-read-private: acceder al perfil y detectar si tiene Premium
-// - user-read-email: mostrar el email en el perfil (opcional pero útil)
-// En fases posteriores añadiremos: streaming, playlist-read-private, etc.
 const SCOPES = ["user-read-private", "user-read-email"];
 
-/**
- * Inicia el flujo de login con Spotify.
- * Genera el PKCE, guarda el verifier y redirige al usuario.
- */
-export async function loginWithSpotify() {
+// Construye la URL de autorización
+async function buildAuthUrl() {
   const verifier = generateCodeVerifier();
   const challenge = await generateCodeChallenge(verifier);
-
   saveCodeVerifier(verifier);
 
   const params = new URLSearchParams({
@@ -32,15 +22,43 @@ export async function loginWithSpotify() {
     scope: SCOPES.join(" "),
   });
 
-  window.location.href = `${AUTH_ENDPOINT}?${params.toString()}`;
+  return `${AUTH_ENDPOINT}?${params.toString()}`;
 }
 
-/**
- * Cierra la sesión del usuario: elimina los tokens locales.
- * Nota: esto no revoca el token en Spotify, solo limpia el estado local.
- */
+// Login en la misma pestaña (por si acaso)
+export async function loginWithSpotify() {
+  const url = await buildAuthUrl();
+  window.location.href = url;
+}
+
+// Login en popup
+export async function loginWithSpotifyPopup(onSuccess) {
+  const url = await buildAuthUrl();
+
+  const width = 500;
+  const height = 700;
+  const left = window.screenX + (window.outerWidth - width) / 2;
+  const top = window.screenY + (window.outerHeight - height) / 2;
+
+  window.open(
+    url,
+    "spotify-login",
+    `width=${width},height=${height},left=${left},top=${top}`,
+  );
+
+  // Escucha el mensaje del popup cuando termine el login
+  function handler(e) {
+    if (e.origin !== window.location.origin) return;
+    if (e.data === "spotify-login-success") {
+      window.removeEventListener("message", handler);
+      onSuccess();
+    }
+  }
+
+  window.addEventListener("message", handler);
+}
+
 export function logout() {
   clearTokens();
-  // Redirige a la raíz de la app para mostrar la pantalla de login
-  window.location.href = import.meta.env.BASE_URL || "/";
+  window.location.reload();
 }

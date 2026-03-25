@@ -1,0 +1,45 @@
+@use "../styles/variables" as *;
+
+// ─── Desktop Icon ─────────────────────────────────────────
+.desktop-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  width: 7rem;
+  padding: 0.4rem;
+  cursor: default;
+  border-radius: 0.4rem;
+  user-select: none;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  &__img {
+    width: 3.2rem;
+    height: 3.2rem;
+    object-fit: contain;
+  }
+
+  &__label {
+    color: $xp-text-icon;
+    font-family: $xp-font;
+    font-size: 1.1rem;
+    text-align: center;
+    text-shadow: $xp-text-shadow;
+    line-height: 1.3;
+  }
+}
+
+// ─── Media queries ────────────────────────────────────────
+@media (min-width: $bp-md) {
+  .desktop-icon {
+    width: 8rem;
+
+    &__img {
+      width: 6rem;
+      height: 6rem;
+    }
+  }
+}
