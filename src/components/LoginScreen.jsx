@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from "react-router-dom";
 import { loginWithSpotifyPopup } from "../auth/spotifyAuth.js";
 import { useAuth } from "../hooks/useAuth.js";
 import windowsXpLogo from "../images/windows-xp-logo.png";
@@ -10,11 +10,11 @@ export default function LoginScreen({ onShutdown }) {
   const { reload } = useAuth();
   const navigate = useNavigate();
 
-   async function handleLogin() {
+  async function handleLogin() {
     loginWithSpotifyPopup(async () => {
-      await reload()
-      navigate('/')
-    })
+      await reload();
+      navigate("/");
+    });
   }
 
   return (

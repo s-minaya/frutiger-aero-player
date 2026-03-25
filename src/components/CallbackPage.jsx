@@ -1,11 +1,18 @@
 import { useEffect } from 'react'
 import { exchangeCodeForTokens } from '../auth/tokenManager.js'
+import BootScreen from './BootScreen.jsx'
 
 export default function CallbackPage() {
   useEffect(() => {
     async function handleCallback() {
       const params = new URLSearchParams(window.location.search)
       const code = params.get('code')
+      const error = params.get('error')
+
+      if (error) {
+        window.close()
+        return
+      }
 
       if (!code) return
 
@@ -24,5 +31,5 @@ export default function CallbackPage() {
     handleCallback()
   }, [])
 
-  return <div>Iniciando sesión...</div>
+  return <BootScreen />
 }

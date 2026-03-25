@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { loginWithSpotifyPopup, logout } from "../auth/spotifyAuth.js";
+import { loginWithSpotifyPopup } from "../auth/spotifyAuth.js";
 import { useAuth } from "../hooks/useAuth.js";
 import "../styles/Desktop.scss";
 import DesktopIcon from "./DesktopIcon.jsx";
 import StartMenu from "./StartMenu.jsx";
+import BootScreen from "./BootScreen.jsx";
 import bliss from "../images/bliss.jpg";
 import startIcon from "../images/xp-logo.png";
 import msnIcon from "../images/msn-icon.png";
@@ -13,12 +14,13 @@ import iconSpaceChannel from "../images/space-channel-5.PNG";
 import iconNotepad from "../images/notepad.png";
 import iconWMP from "../images/wmp.webp";
 
-export default function Desktop ({ onShutdown }) {
+export default function Desktop({ onShutdown }) {
+  const [time, setTime] = useState(new Date());
   const [menuOpen, setMenuOpen] = useState(false);
   const [playerOpen, setPlayerOpen] = useState(false);
-  const { user, logout, reload } = useAuth();
+  const { user, reload, loading } = useAuth();
   const menuRef = useRef(null);
-  const [time, setTime] = useState(new Date());
+
   const formattedTime = time.toLocaleTimeString("es-ES", {
     hour: "2-digit",
     minute: "2-digit",
@@ -44,6 +46,8 @@ export default function Desktop ({ onShutdown }) {
 
     return () => clearInterval(interval);
   }, []);
+
+  if (loading) return <BootScreen />;
 
   return (
     <div className="desktop" style={{ "--bliss": `url(${bliss})` }}>
