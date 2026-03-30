@@ -5,6 +5,7 @@ import "../styles/Desktop.scss";
 import DesktopIcon from "./DesktopIcon.jsx";
 import StartMenu from "./StartMenu.jsx";
 import BootScreen from "./BootScreen.jsx";
+import WMPlayer from './WMPlayer.jsx'
 import bliss from "../images/bliss.jpg";
 import startIcon from "../images/xp-logo.png";
 import msnIcon from "../images/msn-icon.png";
@@ -61,9 +62,10 @@ export default function Desktop({ onShutdown }) {
         <DesktopIcon
           label="Windows Media Player"
           icon={iconWMP}
-          onDoubleClick={() => console.log("abrir player")}
+          onDoubleClick={() => setPlayerOpen(true)}
         />
       </div>
+      {playerOpen && <WMPlayer onClose={() => setPlayerOpen(false)} />}
 
       {/* Barra de tareas */}
       <div className="taskbar">
@@ -93,6 +95,7 @@ export default function Desktop({ onShutdown }) {
               user={user}
             />
           )}
+          
         </div>
 
         {/* System tray */}

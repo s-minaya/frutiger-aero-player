@@ -1,0 +1,101 @@
+@use '../styles/variables' as *;
+
+.wmp {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90vw;
+  max-width: 60rem;
+  background: #1a1a2e;
+  border: 0.1rem solid #444;
+  border-radius: 0.8rem;
+  overflow: hidden;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+
+  // ─── Barra de título ──────────────────────────────────
+  &__titlebar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.8rem 1.2rem;
+    background: #0d0d1a;
+    border-bottom: 0.1rem solid #333;
+    cursor: default;
+  }
+
+  &__title-text {
+    color: white;
+    font-family: $xp-font;
+    font-size: 1.2rem;
+  }
+
+  &__close {
+    background: none;
+    border: none;
+    color: #aaa;
+    font-size: 1.4rem;
+    cursor: pointer;
+    padding: 0.2rem 0.6rem;
+    border-radius: 0.3rem;
+    line-height: 1;
+
+    &:hover {
+      background: #cc3333;
+      color: white;
+    }
+  }
+
+  // ─── Tabs ─────────────────────────────────────────────
+  &__tabs {
+    display: flex;
+    background: #111122;
+    border-bottom: 0.1rem solid #333;
+  }
+
+  &__tab {
+    flex: 1;
+    padding: 1rem;
+    background: none;
+    border: none;
+    color: #aaa;
+    font-family: $xp-font;
+    font-size: 1.2rem;
+    cursor: pointer;
+    border-bottom: 0.2rem solid transparent;
+
+    &:hover {
+      color: white;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    &--active {
+      color: white;
+      border-bottom-color: #4a6fff;
+    }
+  }
+
+  // ─── Contenido ────────────────────────────────────────
+  &__content {
+    padding: 1.6rem;
+    color: white;
+    font-family: $xp-font;
+    font-size: 1.2rem;
+    min-height: 30rem;
+  }
+}
+
+// ─── Media queries ────────────────────────────────────────
+@media (min-width: $bp-md) {
+  .wmp {
+    width: 60rem;
+  }
+}
+
+@media (min-width: $bp-lg) {
+  .wmp {
+    width: 70rem;
+  }
+}
