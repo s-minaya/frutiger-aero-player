@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
+import SearchPanel from './SearchPanel.jsx'
 import '../styles/WMPlayer.scss'
 
 export default function WMPlayer({ onClose }) {
@@ -50,7 +51,7 @@ export default function WMPlayer({ onClose }) {
 
       {/* Contenido */}
       <div className="wmp__content">
-        {activeTab === 'search' && <div>Búsqueda — próximamente</div>}
+        {activeTab === 'search' &&  <SearchPanel />}
         {activeTab === 'playlists' && <div>Playlists — próximamente</div>}
         {activeTab === 'player' && <div>Player — próximamente</div>}
       </div>

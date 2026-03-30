@@ -99,6 +99,36 @@
     white-space: nowrap;
   }
 }
+.taskbar__app {
+  align-self: center;
+  height: 3.5rem; 
+  padding: 0 0.8rem;
+  margin-left: 1.5rem;
+  background: #5896f0;
+  border: none; 
+  color: white;
+  font-family: $xp-font;
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  max-width: 16rem;
+  min-width: 8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  
+  border-radius: 3px;
+
+
+  &-icon {
+    width: 1.6rem;
+    height: 1.6rem;
+    object-fit: contain;
+    flex-shrink: 0;
+  }
+}
 
 // ─── Media queries ────────────────────────────────────────
 @media (min-width: $bp-md) {

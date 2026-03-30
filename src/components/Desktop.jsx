@@ -5,7 +5,7 @@ import "../styles/Desktop.scss";
 import DesktopIcon from "./DesktopIcon.jsx";
 import StartMenu from "./StartMenu.jsx";
 import BootScreen from "./BootScreen.jsx";
-import WMPlayer from './WMPlayer.jsx'
+import WMPlayer from "./WMPlayer.jsx";
 import bliss from "../images/bliss.jpg";
 import startIcon from "../images/xp-logo.png";
 import msnIcon from "../images/msn-icon.png";
@@ -95,8 +95,14 @@ export default function Desktop({ onShutdown }) {
               user={user}
             />
           )}
-          
         </div>
+        {/* Botón WMP en taskbar — solo visible cuando el player está abierto */}
+        {playerOpen && (
+          <button className="taskbar__app" onClick={() => setPlayerOpen(true)}>
+            <img className="taskbar__app-icon" src={iconWMP} alt="" />
+            <span>Windows Media Player</span>
+          </button>
+        )}
 
         {/* System tray */}
         <div className="system-tray">
