@@ -19,7 +19,7 @@ export default function Desktop({ onShutdown }) {
   const [time, setTime] = useState(new Date());
   const [menuOpen, setMenuOpen] = useState(false);
   const [playerOpen, setPlayerOpen] = useState(false);
-  const { user, reload, loading } = useAuth();
+  const { user, reload, loading, isPremium } = useAuth();
   const menuRef = useRef(null);
 
   const formattedTime = time.toLocaleTimeString("es-ES", {
@@ -65,7 +65,9 @@ export default function Desktop({ onShutdown }) {
           onDoubleClick={() => setPlayerOpen(true)}
         />
       </div>
-      {playerOpen && <WMPlayer onClose={() => setPlayerOpen(false)} />}
+      {playerOpen && (
+        <WMPlayer onClose={() => setPlayerOpen(false)} isPremium={isPremium} />
+      )}
 
       {/* Barra de tareas */}
       <div className="taskbar">

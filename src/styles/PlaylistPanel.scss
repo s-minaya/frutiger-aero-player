@@ -1,0 +1,146 @@
+@use '../styles/variables' as *;
+
+.playlist-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+
+  // ─── Estados ──────────────────────────────────────────
+  &__status {
+    color: #888;
+    font-family: $xp-font;
+    font-size: 1.2rem;
+    text-align: center;
+    padding: 1rem 0;
+
+    &--error {
+      color: #ff6666;
+    }
+  }
+
+  &__locked {
+    color: #888;
+    font-family: $xp-font;
+    font-size: 1.2rem;
+    text-align: center;
+    padding: 2rem 0;
+  }
+
+  // ─── Filtro ───────────────────────────────────────────
+  &__search {
+    display: flex;
+    align-items: center;
+    background: #0d0d1a;
+    border: 0.1rem solid #444;
+    border-radius: 0.4rem;
+    padding: 0.4rem 1rem;
+  }
+
+  &__filter {
+    width: 100%;
+    background: none;
+    border: none;
+    outline: none;
+    color: white;
+    font-family: $xp-font;
+    font-size: 1.3rem;
+
+    &::placeholder {
+      color: #666;
+    }
+  }
+
+  // ─── Lista ────────────────────────────────────────────
+  &__list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    max-height: 40rem;
+    overflow-y: auto;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.8rem;
+    border-radius: 0.4rem;
+    cursor: pointer;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.07);
+    }
+  }
+
+  &__cover {
+    width: 4rem;
+    height: 4rem;
+    object-fit: cover;
+    border-radius: 0.2rem;
+    flex-shrink: 0;
+    background: #333;
+  }
+
+  &__info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-width: 0;
+  }
+
+  &__name {
+    color: white;
+    font-family: $xp-font;
+    font-size: 1.2rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__count {
+    color: #888;
+    font-family: $xp-font;
+    font-size: 1.1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__duration {
+    color: #666;
+    font-family: $xp-font;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  // ─── Vista de tracks ──────────────────────────────────
+  &__tracks {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  &__back {
+    align-self: flex-start;
+    background: none;
+    border: none;
+    color: #6a9fff;
+    font-family: $xp-font;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__title {
+    color: white;
+    font-family: $xp-font;
+    font-size: 1.4rem;
+    font-weight: bold;
+  }
+}
