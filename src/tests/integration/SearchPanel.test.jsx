@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import SearchPanel from '../../components/SearchPanel.jsx'
 
 /**
@@ -24,7 +24,7 @@ vi.mock('../../hooks/useSearch.js', () => ({
 }))
 
 vi.mock('../../api/search.js', () => ({
-  formatDuration: vi.fn((ms) => '3:00'), // valor fijo para simplificar
+  formatDuration: vi.fn(() => '3:00'), // valor fijo para simplificar
   searchTracks: vi.fn(),
 }))
 
