@@ -19,32 +19,52 @@ export default function Desktop({ onShutdown }) {
   const [time, setTime] = useState(new Date());
   const [menuOpen, setMenuOpen] = useState(false);
   const [playerOpen, setPlayerOpen] = useState(false);
+  const [playerMounted, setPlayerMounted] = useState(false);
   const { user, reload, loading, isPremium } = useAuth();
   const menuRef = useRef(null);
+  const wmpRef = useRef(null);
+  const taskbarWmpBtnRef = useRef(null);
 
   const formattedTime = time.toLocaleTimeString("es-ES", {
     hour: "2-digit",
     minute: "2-digit",
   });
+
+  // Click fuera del menú inicio → cerrarlo
   useEffect(() => {
     function handleClickOutside(e) {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setMenuOpen(false);
       }
     }
-
     if (menuOpen) {
       document.addEventListener("mousedown", handleClickOutside);
     }
-
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [menuOpen]);
+
+  // Click fuera del WMP → minimizarlo (queda en taskbar).
+  // Excluimos el botón de taskbar: su propio onClick ya gestiona el toggle
+  // y procesarlo aquí también causaría que se volviera a abrir inmediatamente.
+  useEffect(() => {
+    if (!playerOpen) return;
+    function handleClickOutsideWmp(e) {
+      if (
+        wmpRef.current &&
+        !wmpRef.current.contains(e.target) &&
+        !taskbarWmpBtnRef.current?.contains(e.target)
+      ) {
+        setPlayerOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutsideWmp);
+    return () => document.removeEventListener("mousedown", handleClickOutsideWmp);
+  }, [playerOpen]);
 
   useEffect(() => {
     const interval = setInterval(() => {
       setTime(new Date());
     }, 1000);
-
     return () => clearInterval(interval);
   }, []);
 
@@ -62,11 +82,23 @@ export default function Desktop({ onShutdown }) {
         <DesktopIcon
           label="Windows Media Player"
           icon={iconWMP}
-          onDoubleClick={() => setPlayerOpen(true)}
+          onDoubleClick={() => {
+            setPlayerMounted(true);
+            setPlayerOpen(true);
+          }}
         />
       </div>
-      {playerOpen && (
-        <WMPlayer onClose={() => setPlayerOpen(false)} isPremium={isPremium} />
+
+      {/* WMPlayer — se monta solo cuando está visible; la taskbar se controla con playerMounted */}
+      {playerMounted && playerOpen && (
+        <WMPlayer
+          ref={wmpRef}
+          onClose={() => {
+            setPlayerOpen(false);
+            setPlayerMounted(false);
+          }}
+          isPremium={isPremium}
+        />
       )}
 
       {/* Barra de tareas */}
@@ -85,10 +117,11 @@ export default function Desktop({ onShutdown }) {
             <span>Inicio</span>
           </button>
 
-          {/* Menú inicio  */}
+          {/* Menú inicio */}
           {menuOpen && (
             <StartMenu
               onOpenPlayer={() => {
+                setPlayerMounted(true);
                 setPlayerOpen(true);
                 setMenuOpen(false);
               }}
@@ -98,9 +131,14 @@ export default function Desktop({ onShutdown }) {
             />
           )}
         </div>
-        {/* Botón WMP en taskbar — solo visible cuando el player está abierto */}
-        {playerOpen && (
-          <button className="taskbar__app" onClick={() => setPlayerOpen(true)}>
+
+        {/* Botón WMP en taskbar — visible cuando el player está montado */}
+        {playerMounted && (
+          <button
+            ref={taskbarWmpBtnRef}
+            className={`taskbar__app ${playerOpen ? "taskbar__app--active" : ""}`}
+            onClick={() => setPlayerOpen((open) => !open)}
+          >
             <img className="taskbar__app-icon" src={iconWMP} alt="" />
             <span>Windows Media Player</span>
           </button>

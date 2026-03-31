@@ -1,29 +1,21 @@
-import { useEffect, useState, useRef } from "react";
+import { forwardRef, useState } from "react";
 import SearchPanel from "./SearchPanel.jsx";
 import PlaylistPanel from "./PlaylistPanel.jsx";
 import "./WMPlayer.scss";
 
-export default function WMPlayer({ onClose, isPremium }) {
+// forwardRef permite que Desktop apunte al nodo DOM del WMP
+// para detectar clicks fuera desde el padre, que es quien tiene el estado.
+const WMPlayer = forwardRef(function WMPlayer({ onClose, isPremium }, ref) {
   const [activeTab, setActiveTab] = useState("search");
-  const wmpRef = useRef(null);
-
-  useEffect(() => {
-    function handleClickOutside(e) {
-      if (wmpRef.current && !wmpRef.current.contains(e.target)) {
-        onClose();
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [onClose]);
 
   return (
-    <div className="wmp" ref={wmpRef}>
+    <div className="wmp" ref={ref}>
       {/* Barra de título */}
       <div className="wmp__titlebar">
         <div className="wmp__title">
           <span className="wmp__title-text">Windows Media Player</span>
         </div>
+        {/* La X cierra completamente — desmonta el componente */}
         <button className="wmp__close" onClick={onClose}>
           ✕
         </button>
@@ -59,4 +51,6 @@ export default function WMPlayer({ onClose, isPremium }) {
       </div>
     </div>
   );
-}
+});
+
+export default WMPlayer;

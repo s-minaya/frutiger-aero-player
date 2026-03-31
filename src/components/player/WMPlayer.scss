@@ -1,4 +1,4 @@
-@use '../../styles/variables' as *;
+@use "../../styles/variables" as *;
 
 .wmp {
   position: fixed;
@@ -74,6 +74,9 @@
     &--active {
       color: white;
       border-bottom-color: #4a6fff;
+    }
+    &--hidden {
+      display: none;
     }
   }
 
