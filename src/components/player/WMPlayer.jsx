@@ -1,27 +1,51 @@
+/**
+ * WMPlayer.jsx — Ventana del reproductor Windows Media Player
+ *
+ * Por qué usa forwardRef:
+ * Desktop.jsx necesita una ref al nodo DOM del WMP para detectar clicks
+ * fuera y minimizar la ventana. Como WMPlayer es un componente hijo,
+ * la única forma de exponer su nodo DOM al padre es con forwardRef.
+ * Sin forwardRef, ref={wmpRef} en Desktop.jsx apuntaría al componente
+ * React, no al div del DOM, y .contains() no funcionaría.
+ *
+ * Ciclo de vida controlado por Desktop.jsx:
+ * - Se monta cuando playerMounted && playerOpen son true
+ * - Click fuera → Desktop llama al handler que pone playerOpen=false
+ *   (el componente sigue montado, solo se oculta visualmente)
+ * - Click en X → onClose() pone playerMounted=false y playerOpen=false
+ *   (el componente se desmonta completamente)
+ * - Click en taskbar → toggle de playerOpen (mostrar/ocultar)
+ *
+ * Tabs:
+ * - Buscar → SearchPanel (disponible para todos los usuarios)
+ * - Playlists → PlaylistPanel (solo Premium)
+ * - Player → próximamente en Fase 5
+ */
+
 import { forwardRef, useState } from "react";
 import SearchPanel from "./SearchPanel.jsx";
 import PlaylistPanel from "./PlaylistPanel.jsx";
 import "./WMPlayer.scss";
 
-// forwardRef permite que Desktop apunte al nodo DOM del WMP
-// para detectar clicks fuera desde el padre, que es quien tiene el estado.
 const WMPlayer = forwardRef(function WMPlayer({ onClose, isPremium }, ref) {
   const [activeTab, setActiveTab] = useState("search");
 
   return (
+    // ref expone este nodo DOM a Desktop.jsx para detectar clicks fuera
     <div className="wmp" ref={ref}>
-      {/* Barra de título */}
+      {/* ── Barra de título ───────────────────────────────────────────── */}
       <div className="wmp__titlebar">
         <div className="wmp__title">
           <span className="wmp__title-text">Windows Media Player</span>
         </div>
-        {/* La X cierra completamente — desmonta el componente */}
+        {/* X cierra completamente — desmonta el WMP y lo quita de la taskbar.
+            Diferente al click fuera que solo minimiza (oculta sin desmontar) */}
         <button className="wmp__close" onClick={onClose}>
           ✕
         </button>
       </div>
 
-      {/* Tabs */}
+      {/* ── Navegación por tabs ───────────────────────────────────────── */}
       <div className="wmp__tabs">
         <button
           className={`wmp__tab ${activeTab === "search" ? "wmp__tab--active" : ""}`}
@@ -43,10 +67,17 @@ const WMPlayer = forwardRef(function WMPlayer({ onClose, isPremium }, ref) {
         </button>
       </div>
 
-      {/* Contenido */}
+      {/* ── Contenido del tab activo ──────────────────────────────────── */}
       <div className="wmp__content">
+        {/* Búsqueda — disponible para todos los usuarios */}
         {activeTab === "search" && <SearchPanel />}
+
+        {/* Playlists — isPremium controla si se muestra el contenido
+            o el mensaje de "requiere Premium" dentro del componente */}
         {activeTab === "playlists" && <PlaylistPanel isPremium={isPremium} />}
+
+        {/* Player — pendiente de implementar en Fase 5
+            Integrará el Web Playback SDK de Spotify */}
         {activeTab === "player" && <div>Player — próximamente</div>}
       </div>
     </div>

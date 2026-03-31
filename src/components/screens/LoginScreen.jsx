@@ -1,3 +1,13 @@
+/**
+ * Flujo de login:
+ * 1. Usuario hace click en el avatar
+ * 2. Se abre popup de Spotify (loginWithSpotifyPopup)
+ * 3. Usuario se autentica en Spotify
+ * 4. Popup envía 'spotify-login-success' y se cierra
+ * 5. reload() actualiza el estado de useAuth con el perfil real
+ * 6. navigate('/') lleva al usuario al Desktop
+ */
+
 import { useNavigate } from "react-router-dom";
 import { loginWithSpotifyPopup } from "../../auth/spotifyAuth.js";
 import { useAuth } from "../../hooks/useAuth.js";
@@ -7,9 +17,22 @@ import defaultUser from "../../assets/ui/chess-user.webp";
 import "./LoginScreen.scss";
 
 export default function LoginScreen({ onShutdown }) {
+  // reload() recarga el perfil del usuario sin recargar la página —
+  // lo llamamos tras el login exitoso para que useAuth tenga los datos reales
   const { reload } = useAuth();
   const navigate = useNavigate();
 
+  /**
+   * Inicia el flujo de login con Spotify.
+   *
+   * loginWithSpotifyPopup abre el popup y llama al callback cuando
+   * el popup envía 'spotify-login-success'. En el callback:
+   * 1. reload() — carga el perfil real del usuario en useAuth
+   * 2. navigate('/') — redirige al Desktop ahora que hay sesión
+   *
+   * El await en reload() es importante — si navegáramos antes de que
+   * reload termine, Desktop cargaría con user=null brevemente.
+   */
   async function handleLogin() {
     loginWithSpotifyPopup(async () => {
       await reload();
@@ -19,12 +42,14 @@ export default function LoginScreen({ onShutdown }) {
 
   return (
     <div className="login-screen">
-      {/* Barra superior */}
+
+      {/* Barra superior azul oscura */}
       <div className="login-screen__top-bar" />
 
-      {/* Cuerpo central */}
+      {/* Cuerpo central dividido en dos columnas */}
       <div className="login-screen__body">
-        {/* Columna izquierda — logo */}
+
+        {/* Columna izquierda — logo e instrucción */}
         <div className="login-screen__left">
           <img
             className="login-screen__logo"
@@ -39,9 +64,13 @@ export default function LoginScreen({ onShutdown }) {
         {/* Divisor vertical */}
         <div className="login-screen__divider" />
 
-        {/* Columna derecha — usuario */}
+        {/* Columna derecha — usuario clickable */}
         <div className="login-screen__right">
+          {/* Todo el bloque es clickable — igual que en XP donde
+              hacías click en el nombre/avatar para iniciar sesión */}
           <div className="login-screen__user" onClick={handleLogin}>
+            {/* Avatar genérico de XP — se mantiene siempre igual porque
+                antes del login no sabemos quién es el usuario */}
             <img
               className="login-screen__avatar"
               src={defaultUser}
@@ -50,10 +79,13 @@ export default function LoginScreen({ onShutdown }) {
             <span className="login-screen__username">Usuario</span>
           </div>
         </div>
+
       </div>
 
-      {/* Pie */}
+      {/* Pie — botón de apagar */}
       <div className="login-screen__footer">
+        {/* onShutdown viene de AppContent — activa shuttingDown=true
+            que superpone ShutdownScreen sobre toda la app */}
         <button className="login-screen__shutdown" onClick={onShutdown}>
           <img
             className="login-screen__shutdown-icon"
@@ -63,6 +95,7 @@ export default function LoginScreen({ onShutdown }) {
           <span>Apagar el equipo</span>
         </button>
       </div>
+
     </div>
   );
 }
