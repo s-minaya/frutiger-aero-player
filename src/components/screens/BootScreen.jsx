@@ -1,6 +1,6 @@
-import windowsXpWhiteLogo from "../images/windows-xp-logo-white.png";
+import windowsXpWhiteLogo from "../../assets/branding/windows-xp-logo-white.png";
 import XPLoader from './XPLoader.jsx'
-import '../styles/BootScreen.scss'
+import './BootScreen.scss'
 
 export default function BootScreen() {
   return (

@@ -1,4 +1,4 @@
-import "../styles/DesktopIcon.scss";
+import "./DesktopIcon.scss";
 export default function DesktopIcon({ label, icon, onDoubleClick }) {
   return (
     <div className="desktop-icon" onDoubleClick={onDoubleClick}>

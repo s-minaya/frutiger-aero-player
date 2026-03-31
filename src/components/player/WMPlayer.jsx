@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import SearchPanel from "./SearchPanel.jsx";
 import PlaylistPanel from "./PlaylistPanel.jsx";
-import "../styles/WMPlayer.scss";
+import "./WMPlayer.scss";
 
 export default function WMPlayer({ onClose, isPremium }) {
   const [activeTab, setActiveTab] = useState("search");

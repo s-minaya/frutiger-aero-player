@@ -1,19 +1,19 @@
 import { useState, useEffect, useRef } from "react";
-import { loginWithSpotifyPopup } from "../auth/spotifyAuth.js";
-import { useAuth } from "../hooks/useAuth.js";
-import "../styles/Desktop.scss";
+import { loginWithSpotifyPopup } from "../../auth/spotifyAuth.js";
+import { useAuth } from "../../hooks/useAuth.js";
+import "./Desktop.scss";
 import DesktopIcon from "./DesktopIcon.jsx";
 import StartMenu from "./StartMenu.jsx";
-import BootScreen from "./BootScreen.jsx";
-import WMPlayer from "./WMPlayer.jsx";
-import bliss from "../images/bliss.jpg";
-import startIcon from "../images/xp-logo.png";
-import msnIcon from "../images/msn-icon.png";
-import iconPaint from "../images/paint.webp";
-import iconMinesweeper from "../images/minesweeper.png";
-import iconSpaceChannel from "../images/space-channel-5.PNG";
-import iconNotepad from "../images/notepad.png";
-import iconWMP from "../images/wmp.webp";
+import BootScreen from "../screens/BootScreen.jsx";
+import WMPlayer from "../player/WMPlayer.jsx";
+import bliss from "../../assets/wallpaper/bliss.jpg";
+import startIcon from "../../assets/branding/xp-logo.png";
+import msnIcon from "../../assets/icons/msn-icon.png";
+import iconPaint from "../../assets/icons/paint.webp";
+import iconMinesweeper from "../../assets/icons/minesweeper.png";
+import iconSpaceChannel from "../../assets/icons/space-channel-5.PNG";
+import iconNotepad from "../../assets/icons/notepad.png";
+import iconWMP from "../../assets/icons/wmp.webp";
 
 export default function Desktop({ onShutdown }) {
   const [time, setTime] = useState(new Date());

@@ -1,4 +1,4 @@
-import "../styles/XPLoader.scss";
+import "./XPLoader.scss";
 
 export default function XPLoader() {
   return (

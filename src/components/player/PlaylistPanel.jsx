@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { usePlaylists } from "../hooks/usePlaylists.js";
-import { getPlaylistTracks } from "../api/playlists.js";
-import { formatDuration } from "../api/search.js";
-import "../styles/PlaylistPanel.scss";
+import { usePlaylists } from "../../hooks/usePlaylists.js";
+import { getPlaylistTracks } from "../../api/playlists.js";
+import { formatDuration } from "../../utils/formatDuration.js";
+import "./PlaylistPanel.scss";
 
 export default function PlaylistPanel({ isPremium }) {
   const { playlists, loading, error } = usePlaylists();

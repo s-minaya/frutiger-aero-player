@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import PlaylistPanel from '../../components/PlaylistPanel.jsx'
+import PlaylistPanel from '../../components/player/PlaylistPanel.jsx'
 import { server } from '../mocks/server.js'
 import { http, HttpResponse } from 'msw'
 

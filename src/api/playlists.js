@@ -15,6 +15,5 @@ export async function getUserPlaylists(limit = 10) {
  */
 export async function getPlaylistTracks(playlistId) {
   const data = await spotifyFetch(`/playlists/${playlistId}/items`);
-  console.log("primer item:", data.items[0]);
   return data.items;
 }

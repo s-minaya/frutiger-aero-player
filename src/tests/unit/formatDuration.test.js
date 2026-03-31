@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { formatDuration } from "../../api/search.js";
+import { formatDuration } from "../../utils/formatDuration.js";
 
 /**
  * formatDuration convierte milisegundos a formato mm:ss

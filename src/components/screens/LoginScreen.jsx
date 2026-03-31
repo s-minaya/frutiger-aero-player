@@ -1,10 +1,10 @@
 import { useNavigate } from "react-router-dom";
-import { loginWithSpotifyPopup } from "../auth/spotifyAuth.js";
-import { useAuth } from "../hooks/useAuth.js";
-import windowsXpLogo from "../images/windows-xp-logo.png";
-import shutdownBtn from "../images/shutdown-btn.png";
-import defaultUser from "../images/chess-user.webp";
-import "../styles/LoginScreen.scss";
+import { loginWithSpotifyPopup } from "../../auth/spotifyAuth.js";
+import { useAuth } from "../../hooks/useAuth.js";
+import windowsXpLogo from "../../assets/branding/windows-xp-logo.png";
+import shutdownBtn from "../../assets/ui/shutdown-btn.png";
+import defaultUser from "../../assets/ui/chess-user.webp";
+import "./LoginScreen.scss";
 
 export default function LoginScreen({ onShutdown }) {
   const { reload } = useAuth();

@@ -2,11 +2,11 @@ import { useState } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth.js'
 import { isLoggedIn } from '../auth/tokenManager.js'
-import LoginScreen from './LoginScreen.jsx'
-import Desktop from './Desktop.jsx'
+import LoginScreen from './screens/LoginScreen.jsx'
+import Desktop from './desktop/Desktop.jsx'
 import CallbackPage from './CallbackPage.jsx'
-import ShutdownScreen from './ShutdownScreen.jsx'
-import BootScreen from './BootScreen.jsx'
+import ShutdownScreen from './screens/ShutdownScreen.jsx'
+import BootScreen from './screens/BootScreen.jsx'
 
 function PrivateRoute({ children }) {
   return isLoggedIn() ? children : <Navigate to="/login" replace />

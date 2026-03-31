@@ -1,6 +1,6 @@
-import { useSearch } from '../hooks/useSearch.js'
-import { formatDuration } from '../api/search.js'
-import '../styles/SearchPanel.scss'
+import { useSearch } from '../../hooks/useSearch.js'
+import { formatDuration } from '../../utils/formatDuration.js'
+import './SearchPanel.scss'
 
 export default function SearchPanel() {
   const { query, setQuery, results, loading, error } = useSearch()

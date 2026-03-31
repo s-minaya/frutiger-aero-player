@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { exchangeCodeForTokens } from '../auth/tokenManager.js'
-import BootScreen from './BootScreen.jsx'
+import BootScreen from './screens/BootScreen.jsx'
 
 export default function CallbackPage() {
   useEffect(() => {

@@ -20,7 +20,6 @@ export function useSearch() {
         setLoading(true);
         setError(null);
         const tracks = await searchTracks(query);
-        console.log("resultados:", tracks);
         setResults(tracks);
       } catch (err) {
         setError(err.message);

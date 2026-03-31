@@ -1,7 +1,7 @@
-import '../styles/StartMenu.scss'
-import iconWMP from '../images/wmp.webp'
-import defaultUser from '../images/chess-user.webp'
-import logoutIcon from '../images/logout-key.PNG' 
+import './StartMenu.scss'
+import iconWMP from '../../assets/icons/wmp.webp'
+import defaultUser from '../../assets/ui/chess-user.webp'
+import logoutIcon from '../../assets/ui/logout-key.PNG' 
 
 export default function StartMenu({ onOpenPlayer, onLogout, onLogin, user }) {
   const avatar = user?.images?.[0]?.url || defaultUser

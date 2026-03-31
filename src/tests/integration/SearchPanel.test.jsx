@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import SearchPanel from "../../components/SearchPanel.jsx";
+import SearchPanel from "../../components/player/SearchPanel.jsx";
 import { server } from "../mocks/server.js";
 import { http, HttpResponse } from "msw";
 
