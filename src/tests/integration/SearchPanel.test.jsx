@@ -1,196 +1,145 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
-import SearchPanel from '../../components/SearchPanel.jsx'
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import SearchPanel from "../../components/SearchPanel.jsx";
+import { server } from "../mocks/server.js";
+import { http, HttpResponse } from "msw";
 
 /**
- * Tests de integración de SearchPanel.
+ * Tests de integración de SearchPanel con MSW.
  *
- * SearchPanel tiene más estados que PlaylistPanel:
- * - Sin búsqueda (estado inicial)
- * - Cargando (debounce en curso)
- * - Con resultados
- * - Sin resultados
- * - Con error
+ * Ahora probamos la cadena completa:
+ * SearchPanel → useSearch → searchTracks → spotifyFetch → fetch → MSW
  *
- * Mockeamos useSearch para controlar estos estados
- * sin depender del debounce real ni de la API de Spotify.
+ * MSW intercepta el fetch real y devuelve datos controlados.
+ * Esto nos da más confianza que mockear el hook directamente,
+ * porque probamos que toda la cadena funciona junta.
  *
- * fireEvent simula interacciones del usuario — escribir en el input,
- * hacer click, etc. sin necesitar un navegador real
+ * Para que spotifyFetch no falle por falta de token,
+ * ponemos un token falso en localStorage antes de cada test.
  */
 
-vi.mock('../../hooks/useSearch.js', () => ({
-  useSearch: vi.fn(),
-}))
+beforeEach(() => {
+  // spotifyFetch necesita un token para añadir el header Authorization.
+  // Sin esto getValidAccessToken lanza un error antes de llegar a MSW
+  localStorage.setItem("sfa_access_token", "fake_token");
+  localStorage.setItem("sfa_expires_at", String(Date.now() + 3600 * 1000));
+});
 
-vi.mock('../../api/search.js', () => ({
-  formatDuration: vi.fn(() => '3:00'), // valor fijo para simplificar
-  searchTracks: vi.fn(),
-}))
+afterEach(() => {
+  localStorage.clear();
+});
 
-import { useSearch } from '../../hooks/useSearch.js'
-
-describe('SearchPanel', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-  })
-
-  it('muestra el input de búsqueda en el estado inicial', () => {
-    // El input debe estar siempre visible — es el punto de entrada
-    // principal del componente. Sin él el usuario no puede buscar
-    useSearch.mockReturnValue({
-      query: '',
-      setQuery: vi.fn(),
-      results: [],
-      loading: false,
-      error: null,
-    })
-
-    render(<SearchPanel />)
+describe("SearchPanel", () => {
+  it("muestra el input de búsqueda en el estado inicial", () => {
+    // El input es el punto de entrada principal.
+    // Sin él el usuario no puede buscar nada
+    render(<SearchPanel />);
 
     expect(
-      screen.getByPlaceholderText(/Buscar canciones/i)
-    ).toBeInTheDocument()
-  })
+      screen.getByPlaceholderText(/Buscar canciones/i),
+    ).toBeInTheDocument();
+  });
 
-  it('no muestra resultados ni mensajes en el estado inicial', () => {
-    // Con query vacía no debe haber resultados ni mensajes de error.
-    // Mostrar "no se encontraron resultados" sin que el usuario
-    // haya buscado nada sería confuso
-    useSearch.mockReturnValue({
-      query: '',
-      setQuery: vi.fn(),
-      results: [],
-      loading: false,
-      error: null,
-    })
-
-    render(<SearchPanel />)
+  it("no muestra mensajes de estado en el estado inicial", () => {
+    // Con query vacía no debe haber mensajes.
+    // "No se encontraron resultados" sin haber buscado nada
+    // sería confuso para el usuario
+    render(<SearchPanel />);
 
     expect(
-      screen.queryByText(/No se encontraron resultados/i)
-    ).not.toBeInTheDocument()
-  })
+      screen.queryByText(/No se encontraron resultados/i),
+    ).not.toBeInTheDocument();
+  });
 
-  it('llama a setQuery cuando el usuario escribe', () => {
-    // Verificamos que el input está conectado al estado.
-    // Si setQuery no se llama, el debounce nunca se activa
-    // y la búsqueda nunca ocurre
-    const setQuery = vi.fn()
-    useSearch.mockReturnValue({
-      query: '',
-      setQuery,
-      results: [],
-      loading: false,
-      error: null,
-    })
+  it("muestra resultados al escribir en el input", async () => {
+    // Probamos la cadena completa — el usuario escribe,
+    // useSearch hace la petición, MSW la intercepta,
+    // y los resultados aparecen en pantalla.
+    // waitFor espera a que el estado asíncrono se resuelva
+    render(<SearchPanel />);
 
-    render(<SearchPanel />)
+    const input = screen.getByPlaceholderText(/Buscar canciones/i);
+    fireEvent.change(input, { target: { value: "radiohead" } });
 
-    const input = screen.getByPlaceholderText(/Buscar canciones/i)
-    fireEvent.change(input, { target: { value: 'radiohead' } })
+    await waitFor(
+      () => {
+        expect(screen.getByText("Creep")).toBeInTheDocument();
+        expect(screen.getByText("Karma Police")).toBeInTheDocument();
+      },
+      { timeout: 1000 },
+    );
+  });
 
-    expect(setQuery).toHaveBeenCalledWith('radiohead')
-  })
+  it("muestra el artista de cada canción", async () => {
+    // El artista es tan importante como el título para identificar
+    // una canción — verificamos que también se renderiza
+    render(<SearchPanel />);
 
-  it('muestra el estado de carga mientras busca', () => {
-    // El usuario debe saber que su búsqueda está en curso.
-    // Sin feedback de carga la interfaz parece no responder
-    useSearch.mockReturnValue({
-      query: 'radiohead',
-      setQuery: vi.fn(),
-      results: [],
-      loading: true,
-      error: null,
-    })
+    fireEvent.change(screen.getByPlaceholderText(/Buscar canciones/i), {
+      target: { value: "radiohead" },
+    });
 
-    render(<SearchPanel />)
+    await waitFor(
+      () => {
+        expect(screen.getAllByText("Radiohead")).toHaveLength(2);
+      },
+      { timeout: 1000 },
+    );
+  });
 
-    expect(screen.getByText(/Buscando/i)).toBeInTheDocument()
-  })
+  it("muestra mensaje cuando la API no devuelve resultados", async () => {
+    // Sobreescribimos el handler por defecto para simular
+    // una búsqueda sin resultados.
+    // server.use añade un handler temporal que tiene prioridad
+    // sobre los handlers globales solo en este test
+    server.use(
+      http.get("https://api.spotify.com/v1/search", () => {
+        return HttpResponse.json({ tracks: { items: [] } });
+      }),
+    );
 
-  it('muestra mensaje cuando no hay resultados', () => {
-    // Si la búsqueda no devuelve nada, el usuario debe saberlo.
-    // Sin este mensaje podría pensar que la búsqueda no funcionó
-    useSearch.mockReturnValue({
-      query: 'xkzjqwerty12345',
-      setQuery: vi.fn(),
-      results: [],
-      loading: false,
-      error: null,
-    })
+    render(<SearchPanel />);
 
-    render(<SearchPanel />)
+    fireEvent.change(screen.getByPlaceholderText(/Buscar canciones/i), {
+      target: { value: "xkzjqwerty12345" },
+    });
 
-    expect(
-      screen.getByText(/No se encontraron resultados/i)
-    ).toBeInTheDocument()
-  })
+    await waitFor(
+      () => {
+        expect(
+          screen.getByText(/No se encontraron resultados/i),
+        ).toBeInTheDocument();
+      },
+      { timeout: 1000 },
+    );
+  });
 
-  it('muestra el error si la búsqueda falla', () => {
-    // Si la API falla, el usuario debe ver qué ha pasado.
-    // Un error silencioso haría que el usuario pensara
-    // que no hay resultados cuando en realidad hay un problema
-    useSearch.mockReturnValue({
-      query: 'radiohead',
-      setQuery: vi.fn(),
-      results: [],
-      loading: false,
-      error: 'Spotify API error: 429',
-    })
+  it("muestra error si la API devuelve 429", async () => {
+    // spotifyFetch reintenta 3 veces con exponential backoff.
+    // Con Retry-After: 0 el backoff calculado es: 
+    // retryAfter * 1000 * Math.pow(2, attempt) = 0 * 1000 * 2^n = 0ms
+    // así los 4 fetches (3 reintentos + fallo final) ocurren
+    // casi instantáneamente y no necesitamos fake timers
+    server.use(
+      http.get("https://api.spotify.com/v1/search", () => {
+        return HttpResponse.json(
+          { error: { status: 429, message: "Too many requests" } },
+          { status: 429, headers: { "Retry-After": "0" } },
+        );
+      }),
+    );
 
-    render(<SearchPanel />)
+    render(<SearchPanel />);
 
-    expect(
-      screen.getByText(/Spotify API error: 429/i)
-    ).toBeInTheDocument()
-  })
+    fireEvent.change(screen.getByPlaceholderText(/Buscar canciones/i), {
+      target: { value: "radiohead" },
+    });
 
-  it('muestra los resultados cuando la búsqueda tiene éxito', () => {
-    // El caso feliz — la búsqueda devuelve canciones y se muestran.
-    // Verificamos nombre y artista porque son los datos
-    // más importantes para que el usuario identifique la canción
-    useSearch.mockReturnValue({
-      query: 'creep',
-      setQuery: vi.fn(),
-      results: [
-        {
-          id: '1',
-          name: 'Creep',
-          duration_ms: 238000,
-          artists: [{ name: 'Radiohead' }],
-          album: {
-            name: 'Pablo Honey',
-            images: [
-              { url: 'https://example.com/large.jpg' },
-              { url: 'https://example.com/medium.jpg' },
-              { url: 'https://example.com/small.jpg' },
-            ],
-          },
-        },
-        {
-          id: '2',
-          name: 'Karma Police',
-          duration_ms: 264000,
-          artists: [{ name: 'Radiohead' }],
-          album: {
-            name: 'OK Computer',
-            images: [
-              { url: 'https://example.com/large.jpg' },
-              { url: 'https://example.com/medium.jpg' },
-              { url: 'https://example.com/small.jpg' },
-            ],
-          },
-        },
-      ],
-      loading: false,
-      error: null,
-    })
-
-    render(<SearchPanel />)
-
-    expect(screen.getByText('Creep')).toBeInTheDocument()
-    expect(screen.getByText('Karma Police')).toBeInTheDocument()
-    expect(screen.getAllByText('Radiohead')).toHaveLength(2)
-  })
-})
+    await waitFor(
+      () => {
+        expect(screen.getByText(/Too many requests/i)).toBeInTheDocument();
+      },
+      { timeout: 2000 },
+    );
+  });
+});

@@ -1,50 +1,38 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import PlaylistPanel from '../../components/PlaylistPanel.jsx'
+import { server } from '../mocks/server.js'
+import { http, HttpResponse } from 'msw'
+
 
 /**
- * Tests de integración de PlaylistPanel.
+ * Tests de integración de PlaylistPanel con MSW.
  *
- * En tests de integración verificamos que los componentes
- * renderizan correctamente y responden a props y estados.
+ * Probamos la cadena completa:
+ * PlaylistPanel → usePlaylists → getUserPlaylists → spotifyFetch → MSW
  *
- * Mockeamos los hooks y la API para no hacer llamadas reales
- * a Spotify — los tests deben ser rápidos, predecibles y
- * funcionar sin conexión a internet.
- *
- * vi.mock intercepta los imports y los reemplaza por versiones
- * controladas por nosotros
+ * Casos que cubrimos:
+ * - Usuario sin Premium ve mensaje de bloqueo
+ * - Usuario Premium ve sus playlists
+ * - Click en playlist carga sus canciones
+ * - Error de API se muestra correctamente
  */
 
-// Mockeamos usePlaylists para controlar qué datos recibe el componente
-vi.mock('../../hooks/usePlaylists.js', () => ({
-  usePlaylists: vi.fn(),
-}))
+beforeEach(() => {
+  localStorage.setItem('sfa_access_token', 'fake_token')
+  localStorage.setItem('sfa_expires_at', String(Date.now() + 3600 * 1000))
+  localStorage.setItem('sfa_refresh_token', 'fake_refresh_token')
+})
 
-// Mockeamos getPlaylistTracks para no hacer llamadas reales
-vi.mock('../../api/playlists.js', () => ({
-  getPlaylistTracks: vi.fn(),
-}))
-
-import { usePlaylists } from '../../hooks/usePlaylists.js'
+afterEach(() => {
+  localStorage.clear()
+})
 
 describe('PlaylistPanel', () => {
-  beforeEach(() => {
-    // Limpiamos los mocks antes de cada test para que no
-    // se contaminen entre sí con llamadas anteriores
-    vi.clearAllMocks()
-  })
-
   it('muestra mensaje de Premium si el usuario no tiene Premium', () => {
-    // Si isPremium es false, el componente no debe mostrar playlists
-    // sino un mensaje explicando que se necesita Premium.
-    // Esto evita llamadas innecesarias a la API para usuarios free
-    usePlaylists.mockReturnValue({
-      playlists: [],
-      loading: false,
-      error: null,
-    })
-
+    // Los usuarios free no pueden ver playlists.
+    // Este mensaje debe aparecer inmediatamente sin hacer
+    // ninguna llamada a la API — es una decisión local
     render(<PlaylistPanel isPremium={false} />)
 
     expect(
@@ -52,87 +40,88 @@ describe('PlaylistPanel', () => {
     ).toBeInTheDocument()
   })
 
-  it('muestra el loader mientras carga las playlists', () => {
-    // Durante la carga el usuario debe ver feedback visual.
-    // Sin esto la interfaz parece congelada y el usuario
-    // no sabe si algo está pasando
-    usePlaylists.mockReturnValue({
-      playlists: [],
-      loading: true,
-      error: null,
-    })
-
+  it('muestra las playlists cuando el usuario tiene Premium', async () => {
+    // Con Premium, usePlaylists hace la petición a la API.
+    // MSW la intercepta y devuelve mockPlaylists.
+    // Verificamos que los nombres aparecen en pantalla
     render(<PlaylistPanel isPremium={true} />)
 
-    expect(
-      screen.getByText(/Cargando playlists/i)
-    ).toBeInTheDocument()
+    await waitFor(() => {
+      expect(
+        screen.getByText('Mi playlist favorita')
+      ).toBeInTheDocument()
+      expect(screen.getByText('Rock clásico')).toBeInTheDocument()
+    }, { timeout: 1000 })
   })
 
-  it('muestra un error si la carga falla', () => {
-    // Si la API falla, el usuario debe ver un mensaje de error
-    // en vez de una pantalla en blanco sin explicación
-    usePlaylists.mockReturnValue({
-      playlists: [],
-      loading: false,
-      error: 'Spotify API error: 403',
-    })
-
+  it('muestra el filtro de búsqueda cuando cargan las playlists', async () => {
+    // El filtro solo tiene sentido cuando hay playlists.
+    // Verificamos que aparece después de la carga
     render(<PlaylistPanel isPremium={true} />)
 
-    expect(
-      screen.getByText(/Spotify API error: 403/i)
-    ).toBeInTheDocument()
+    await waitFor(() => {
+      expect(
+        screen.getByPlaceholderText(/Filtrar playlists/i)
+      ).toBeInTheDocument()
+    }, { timeout: 1000 })
   })
 
-  it('muestra las playlists cuando cargan correctamente', () => {
-    // El caso feliz — el usuario tiene Premium, la API responde bien
-    // y las playlists aparecen en pantalla
-    usePlaylists.mockReturnValue({
-      playlists: [
-        {
-          id: '1',
-          name: 'Mi playlist de prueba',
-          images: [{ url: 'https://example.com/image.jpg' }],
-          tracks: { total: 10 },
-        },
-        {
-          id: '2',
-          name: 'Otra playlist',
-          images: [],
-          tracks: { total: 5 },
-        },
-      ],
-      loading: false,
-      error: null,
-    })
-
+  it('filtra playlists por nombre al escribir', async () => {
+    // El filtro es local — no hace llamadas a la API.
+    // Verificamos que al escribir "Rock" solo aparece
+    // la playlist que contiene esa palabra
     render(<PlaylistPanel isPremium={true} />)
 
-    expect(screen.getByText('Mi playlist de prueba')).toBeInTheDocument()
-    expect(screen.getByText('Otra playlist')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText('Mi playlist favorita')).toBeInTheDocument()
+    }, { timeout: 1000 })
+
+    fireEvent.change(
+      screen.getByPlaceholderText(/Filtrar playlists/i),
+      { target: { value: 'Rock' } }
+    )
+
+    expect(screen.getByText('Rock clásico')).toBeInTheDocument()
+    expect(
+      screen.queryByText('Mi playlist favorita')
+    ).not.toBeInTheDocument()
   })
 
-  it('muestra el filtro de búsqueda cuando hay playlists', () => {
-    // El input de filtro solo tiene sentido cuando hay playlists cargadas.
-    // Verificamos que aparece en el estado correcto
-    usePlaylists.mockReturnValue({
-      playlists: [
-        {
-          id: '1',
-          name: 'Mi playlist',
-          images: [],
-          tracks: { total: 5 },
-        },
-      ],
-      loading: false,
-      error: null,
-    })
+  it('muestra las canciones al hacer click en una playlist', async () => {
+    // Al hacer click en una playlist, se hace una segunda petición
+    // para cargar sus canciones. MSW la intercepta y devuelve
+    // mockPlaylistTracks. Verificamos que las canciones aparecen
+    render(<PlaylistPanel isPremium={true} />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Mi playlist favorita')).toBeInTheDocument()
+    }, { timeout: 1000 })
+
+    fireEvent.click(screen.getByText('Mi playlist favorita'))
+
+    await waitFor(() => {
+      expect(screen.getByText('Creep')).toBeInTheDocument()
+    }, { timeout: 1000 })
+  })
+
+  it('muestra error si la API falla al cargar playlists', async () => {
+    // Sobreescribimos el handler para simular un error de servidor.
+    // El usuario debe ver un mensaje claro en vez de una pantalla vacía
+    server.use(
+      http.get('https://api.spotify.com/v1/me/playlists', () => {
+        return HttpResponse.json(
+          { error: { status: 500, message: 'Internal Server Error' } },
+          { status: 500 }
+        )
+      })
+    )
 
     render(<PlaylistPanel isPremium={true} />)
 
-    expect(
-      screen.getByPlaceholderText(/Filtrar playlists/i)
-    ).toBeInTheDocument()
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Internal Server Error/i)
+      ).toBeInTheDocument()
+    }, { timeout: 1000 })
   })
 })
