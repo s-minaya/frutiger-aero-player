@@ -14,6 +14,10 @@ dist-ssr
 .env
 *.local
 
+# Playwright — artefactos generados en cada ejecución, no pertenecen al repo
+test-results/
+playwright-report/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

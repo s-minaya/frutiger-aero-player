@@ -12,5 +12,8 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: "./src/tests/setup.js",
     globals: true,
+    // Los tests E2E son de Playwright, no de Vitest — excluirlos evita
+    // el error "Playwright Test did not expect test.describe() to be called here"
+    exclude: ["**/node_modules/**", "**/tests/e2e/**"],
   },
 });
