@@ -8,6 +8,12 @@
  * Sin forwardRef, ref={wmpRef} en Desktop.jsx apuntaría al componente
  * React, no al div del DOM, y .contains() no funcionaría.
  *
+ * Por qué useSpotifyPlayer vive aquí y no en PlayerPanel:
+ * El SDK de Spotify se desmontaría cada vez que el usuario cambia de tab,
+ * perdiendo la conexión y mostrando "Conectando..." al volver al Player.
+ * Al inicializarlo en WMPlayer, el SDK vive mientras el reproductor
+ * esté abierto independientemente del tab activo.
+ *
  * Ciclo de vida controlado por Desktop.jsx:
  * - Se monta cuando playerMounted && playerOpen son true
  * - Click fuera → Desktop llama al handler que pone playerOpen=false
@@ -19,18 +25,26 @@
  * Tabs:
  * - Buscar → SearchPanel (disponible para todos los usuarios)
  * - Playlists → PlaylistPanel (solo Premium)
- * - Player → próximamente en Fase 5
+ * - Player → controles de reproducción con el Web Playback SDK
  */
 
 import { forwardRef, useState } from "react";
 import SearchPanel from "./SearchPanel.jsx";
+import PlayerPanel from "./PlayerPanel.jsx";
 import PlaylistPanel from "./PlaylistPanel.jsx";
 import { PlayerProvider } from "../../context/PlayerProvider.jsx";
+import { useSpotifyPlayer } from "../../hooks/useSpotifyPlayer.js";
+
 import "./WMPlayer.scss";
-import PlayerPanel from "./PlayerPanel.jsx";
 
 const WMPlayer = forwardRef(function WMPlayer({ onClose, isPremium }, ref) {
   const [activeTab, setActiveTab] = useState("search");
+  const {
+    deviceId,
+    playerState,
+    loading: sdkLoading,
+    error: sdkError,
+  } = useSpotifyPlayer();
 
   return (
     <PlayerProvider>
@@ -82,9 +96,12 @@ const WMPlayer = forwardRef(function WMPlayer({ onClose, isPremium }, ref) {
           {/* Player — pendiente de implementar en Fase 5
             Integrará el Web Playback SDK de Spotify */}
           {activeTab === "player" && (
-            <div>
-              <PlayerPanel />
-            </div>
+            <PlayerPanel
+              deviceId={deviceId}
+              playerState={playerState}
+              sdkLoading={sdkLoading}
+              sdkError={sdkError}
+            />
           )}
         </div>
       </div>

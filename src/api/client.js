@@ -96,13 +96,13 @@ export async function spotifyFetch(path, options = {}, attempt = 0) {
   // de error que Spotify incluye en el body JSON y lo lanzamos como excepción.
   // Los componentes pueden capturarlo y mostrarlo al usuario.
   if (!response.ok) {
+    console.warn("Error status:", response.status, "url:", response.url);
     let message = `Spotify API error: ${response.status}`;
     try {
       const err = await response.json();
-      // Spotify devuelve { error: { status: 400, message: "..." } }
       message = err?.error?.message || message;
     } catch {
-      // La respuesta no era JSON — usamos el mensaje genérico con el código
+      // La respuesta no era JSON
     }
     throw new SpotifyApiError(message, response.status);
   }
@@ -110,9 +110,19 @@ export async function spotifyFetch(path, options = {}, attempt = 0) {
   // ── 204 No Content ────────────────────────────────────────────────────────
   // Algunos endpoints (play, pause, siguiente...) devuelven 204 sin body.
   // response.json() fallaría en ese caso — devolvemos null explícitamente.
+  // 204 No Content o respuesta sin body
   if (response.status === 204) return null;
 
-  return response.json();
+  // Comprobamos si hay contenido antes de parsear
+  const text = await response.text();
+  if (!text) return null;
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    // Spotify devolvió 200 pero con body vacío o no válido
+    return null;
+  }
 }
 
 // ─── Error personalizado ───────────────────────────────────────────────────────

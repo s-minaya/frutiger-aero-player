@@ -7,10 +7,18 @@
  * 1. Lista de playlists — con filtro por nombre
  * 2. Canciones de una playlist — al hacer click en una playlist
  *
+ * Al hacer click en una canción llama a playTrack(item, trackQueue) del
+ * PlayerContext pasando la lista completa de canciones de la playlist
+ * como queue. Esto permite a PlayerPanel navegar con siguiente/anterior
+ * respetando el orden de la playlist.
+ * trackQueue filtra los items null (episodios de podcast) que Spotify
+ * puede incluir mezclados con las canciones.
+ *
  * Estados y flujo:
  * - isPremium=false → mensaje de bloqueo (sin llamadas a la API)
  * - isPremium=true → usePlaylists carga todas las playlists paginando
  * - Click en playlist → getPlaylistTracks carga sus canciones
+ * - Click en canción → playTrack() con la queue completa de la playlist
  * - Click en "← Volver" → vuelve a la lista de playlists
  *
  * Nota sobre la estructura de la respuesta de /playlists/{id}/items:
@@ -40,6 +48,9 @@ export default function PlaylistPanel({ isPremium }) {
 
   // Texto del filtro — se aplica localmente sin llamadas a la API
   const [filter, setFilter] = useState("");
+
+  // Construimos la queue filtrando los items null (episodios de podcast)
+  const trackQueue = tracks.map(({ item }) => item).filter(Boolean);
 
   /**
    * Filtra las playlists por nombre.
@@ -167,7 +178,11 @@ export default function PlaylistPanel({ isPremium }) {
               // item puede ser null si es un episodio de podcast —
               // la API de Spotify mezcla tracks y episodios en la misma respuesta
               item ? (
-                <li key={item.id} className="playlist-panel__item" onClick={()=> playTrack(item)}>
+                <li
+                  key={item.id}
+                  className="playlist-panel__item"
+                  onClick={() => playTrack(item, trackQueue)}
+                >
                   {/* images[2] = miniatura 64px — igual que en SearchPanel */}
                   <img
                     className="playlist-panel__cover"

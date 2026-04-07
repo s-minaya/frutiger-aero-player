@@ -12,20 +12,37 @@ import { usePlayer } from "../../hooks/usePlayer.js";
 
 // Componente auxiliar que consume el contexto y expone
 // su estado en el DOM para que los tests puedan verificarlo
+const mockQueue = [
+  { id: "1", name: "Creep" },
+  { id: "2", name: "Karma Police" },
+  { id: "3", name: "Bohemian Rhapsody" },
+];
+
 function TestConsumer() {
-  const { currentTrack, isPlaying, volume, playTrack, togglePlay, setVolume } =
-    usePlayer();
+  const {
+    currentTrack,
+    isPlaying,
+    volume,
+    playTrack,
+    togglePlay,
+    setVolume,
+    nextTrack,
+    previousTrack,
+  } = usePlayer();
 
   return (
     <div>
       <p>Canción: {currentTrack?.name ?? "ninguna"}</p>
       <p>Reproduciendo: {isPlaying ? "sí" : "no"}</p>
       <p>Volumen: {volume}</p>
-      <button onClick={() => playTrack({ id: "1", name: "Creep" })}>
-        Play
+      <button onClick={() => playTrack(mockQueue[0], mockQueue)}>Play</button>
+      <button onClick={() => playTrack(mockQueue[1], mockQueue)}>
+        Play segunda
       </button>
       <button onClick={togglePlay}>Toggle</button>
       <button onClick={() => setVolume(0.5)}>Volumen 50%</button>
+      <button onClick={nextTrack}>Siguiente</button>
+      <button onClick={previousTrack}>Anterior</button>
     </div>
   );
 }
@@ -108,5 +125,75 @@ describe("PlayerContext", () => {
     expect(() => {
       render(<TestConsumer />);
     }).toThrow("usePlayer debe usarse dentro de un PlayerProvider");
+  });
+  it("playTrack guarda la queue y el índice correcto", () => {
+    render(
+      <PlayerProvider>
+        <TestConsumer />
+      </PlayerProvider>,
+    );
+
+    // Simulamos click en la segunda canción de una lista de tres
+    // El índice debe ser 1, no 0
+    fireEvent.click(screen.getByText("Play segunda"));
+
+    expect(screen.getByText("Canción: Karma Police")).toBeInTheDocument();
+  });
+
+  it("nextTrack avanza a la siguiente canción de la queue", () => {
+    render(
+      <PlayerProvider>
+        <TestConsumer />
+      </PlayerProvider>,
+    );
+
+    fireEvent.click(screen.getByText("Play"));
+    expect(screen.getByText("Canción: Creep")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText("Siguiente"));
+    expect(screen.getByText("Canción: Karma Police")).toBeInTheDocument();
+  });
+
+  it("previousTrack retrocede a la canción anterior", () => {
+    render(
+      <PlayerProvider>
+        <TestConsumer />
+      </PlayerProvider>,
+    );
+
+    fireEvent.click(screen.getByText("Play"));
+    fireEvent.click(screen.getByText("Siguiente"));
+    expect(screen.getByText("Canción: Karma Police")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText("Anterior"));
+    expect(screen.getByText("Canción: Creep")).toBeInTheDocument();
+  });
+
+  it("nextTrack no hace nada en la última canción", () => {
+    render(
+      <PlayerProvider>
+        <TestConsumer />
+      </PlayerProvider>,
+    );
+
+    fireEvent.click(screen.getByText("Play"));
+    fireEvent.click(screen.getByText("Siguiente")); // → Karma Police
+    fireEvent.click(screen.getByText("Siguiente")); // → última canción
+    fireEvent.click(screen.getByText("Siguiente")); // → no hace nada
+
+    expect(screen.getByText("Canción: Bohemian Rhapsody")).toBeInTheDocument();
+  });
+
+  it("previousTrack no hace nada en la primera canción", () => {
+    render(
+      <PlayerProvider>
+        <TestConsumer />
+      </PlayerProvider>,
+    );
+
+    fireEvent.click(screen.getByText("Play"));
+    fireEvent.click(screen.getByText("Anterior")); // → no hace nada
+
+    expect(screen.getByText("Canción: Creep")).toBeInTheDocument();
   });
 });

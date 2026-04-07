@@ -24,9 +24,15 @@ import { useEffect, useState, useRef } from "react";
 import { getValidAccessToken } from "../auth/tokenManager.js";
 
 export function useSpotifyPlayer() {
-  // El objeto Player del SDK — null hasta que el SDK está listo
+  // El objeto Player del SDK — null hasta que el SDK está listo.
+  // Se expone en el return para que los componentes puedan llamar
+  // a métodos del SDK directamente si lo necesitan.
   const [player, setPlayer] = useState(null);
-  const playerRef = useRef(null); // ← solo para el cleanup
+
+  // Ref al mismo objeto Player — usada exclusivamente en el cleanup.
+  // Sin esta ref, el useEffect tendría que incluir 'player' en sus
+  // dependencias, lo que causaría un bucle infinito de reconexiones.
+  const playerRef = useRef(null);
 
   // ID del dispositivo que Spotify nos asigna — necesario para
   // decirle a Spotify "reproduce en ESTE dispositivo"
