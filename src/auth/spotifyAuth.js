@@ -35,16 +35,17 @@ const AUTH_ENDPOINT = "https://accounts.spotify.com/authorize";
  *   (campo product: 'premium' | 'free')
  * - user-read-email: mostrar el email en el perfil
  * - playlist-read-private: leer las playlists privadas del usuario
- *
- * Scopes pendientes para la Fase 5 (Player):
- * - streaming: usar el Web Playback SDK
- * - user-read-playback-state: leer el estado del reproductor
- * - user-modify-playback-state: controlar play/pause/siguiente
+ * - streaming: permite usar el SDK como dispositivo de reproducción
+ * - user-read-playback-state: leer el estado actual del player
+ * - user-modify-playback-state: controlar play/pause/siguiente/anterior
  */
 const SCOPES = [
   "user-read-private",
   "user-read-email",
   "playlist-read-private",
+  "streaming",
+  "user-read-playback-state",
+  "user-modify-playback-state",
 ];
 
 /**
