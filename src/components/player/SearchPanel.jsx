@@ -1,9 +1,11 @@
 import { useSearch } from "../../hooks/useSearch.js";
 import { formatDuration } from "../../utils/formatDuration.js";
+import { usePlayer } from "../../hooks/usePlayer.js";
 import "./SearchPanel.scss";
 
 export default function SearchPanel() {
   const { query, setQuery, results, loading, error } = useSearch();
+  const { playTrack } = usePlayer();
 
   return (
     <div className="search-panel">
@@ -38,7 +40,7 @@ export default function SearchPanel() {
       {/* Resultados */}
       <ul className="search-panel__results">
         {results.map((track) => (
-          <li key={track.id} className="search-panel__track">
+          <li key={track.id} className="search-panel__track" onClick={() => playTrack(track)}>
             {/* Miniatura del álbum — images[2] es el tamaño más pequeño (64px).
                 Spotify devuelve tres tamaños: [0]=640px, [1]=300px, [2]=64px.
                 Usamos el más pequeño para no cargar imágenes innecesariamente.

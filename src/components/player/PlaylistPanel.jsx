@@ -22,10 +22,12 @@ import { useState } from "react";
 import { usePlaylists } from "../../hooks/usePlaylists.js";
 import { getPlaylistTracks } from "../../api/playlists.js";
 import { formatDuration } from "../../utils/formatDuration.js";
+import { usePlayer } from "../../hooks/usePlayer.js";
 import "./PlaylistPanel.scss";
 
 export default function PlaylistPanel({ isPremium }) {
   const { playlists, loading, error } = usePlaylists();
+  const { playTrack } = usePlayer();
 
   // Playlist seleccionada — null cuando estamos en la vista de lista
   const [selectedPlaylist, setSelectedPlaylist] = useState(null);
@@ -165,7 +167,7 @@ export default function PlaylistPanel({ isPremium }) {
               // item puede ser null si es un episodio de podcast —
               // la API de Spotify mezcla tracks y episodios en la misma respuesta
               item ? (
-                <li key={item.id} className="playlist-panel__item">
+                <li key={item.id} className="playlist-panel__item" onClick={()=> playTrack(item)}>
                   {/* images[2] = miniatura 64px — igual que en SearchPanel */}
                   <img
                     className="playlist-panel__cover"
