@@ -143,14 +143,14 @@ export default function Desktop({ onShutdown }) {
       </div>
 
       {/* ── WMPlayer ──────────────────────────────────────────────────── */}
-      {/* Solo se monta cuando playerMounted Y playerOpen son true.
-          El ref permite al Desktop detectar clicks fuera del WMP.
-          onClose cierra completamente (desmonta + quita de taskbar).
-          Ver comentario del estado al inicio del componente para
-          entender la diferencia entre playerMounted y playerOpen. */}
-      {playerMounted && playerOpen && (
+      {/* Se monta cuando playerMounted es true y se oculta/muestra via
+    isVisible. Mantenerlo montado aunque esté oculto permite que
+    el SDK de Spotify siga corriendo y la música no se interrumpa
+    al hacer click fuera. onClose lo desmonta completamente. */}
+      {playerMounted && (
         <WMPlayer
           ref={wmpRef}
+          isVisible={playerOpen}
           onClose={() => {
             setPlayerOpen(false);
             setPlayerMounted(false);

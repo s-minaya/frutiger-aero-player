@@ -85,6 +85,9 @@
     font-size: 1.2rem;
     min-height: 30rem;
   }
+  &--hidden {
+    display: none;
+  }
 }
 // ─── Player persistente ───────────────────────────────────────────────────────
 .wmp__player {

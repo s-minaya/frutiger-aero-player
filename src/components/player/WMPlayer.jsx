@@ -15,11 +15,11 @@
  * esté abierto independientemente del tab activo.
  *
  * Ciclo de vida controlado por Desktop.jsx:
- * - Se monta cuando playerMounted && playerOpen son true
- * - Click fuera → Desktop llama al handler que pone playerOpen=false
- *   (el componente sigue montado, solo se oculta visualmente)
+ * - Se monta cuando playerMounted es true (independientemente de playerOpen)
+ * - Click fuera → playerOpen=false, se oculta con wmp--hidden pero
+ *   sigue montado — el SDK y la música continúan
  * - Click en X → onClose() pone playerMounted=false y playerOpen=false
- *   (el componente se desmonta completamente)
+ *   (el componente se desmonta completamente y la música para)
  * - Click en taskbar → toggle de playerOpen (mostrar/ocultar)
  *
  * Estructura:
@@ -36,7 +36,10 @@ import { PlayerProvider } from "../../context/PlayerProvider.jsx";
 import { useSpotifyPlayer } from "../../hooks/useSpotifyPlayer.js";
 import "./WMPlayer.scss";
 
-const WMPlayer = forwardRef(function WMPlayer({ onClose, isPremium }, ref) {
+const WMPlayer = forwardRef(function WMPlayer(
+  { onClose, isPremium, isVisible },
+  ref,
+) {
   // Tab activo — solo Buscar y Playlists, Player es siempre visible
   const [activeTab, setActiveTab] = useState("search");
 
@@ -55,7 +58,7 @@ const WMPlayer = forwardRef(function WMPlayer({ onClose, isPremium }, ref) {
   return (
     <PlayerProvider>
       {/* ref expone este nodo DOM a Desktop.jsx para detectar clicks fuera */}
-      <div className="wmp" ref={ref}>
+      <div className={`wmp ${!isVisible ? "wmp--hidden" : ""}`} ref={ref}>
         {/* ── Barra de título ───────────────────────────────────────────── */}
         <div className="wmp__titlebar">
           <div className="wmp__title">
