@@ -1,0 +1,144 @@
+@use '../../styles/variables' as *;
+
+.player-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.6rem;
+  padding: 0.8rem;
+
+  // ─── Estado vacío ─────────────────────────────────────────────────
+  &__status {
+    color: #888;
+    font-family: $xp-font;
+    font-size: 1.2rem;
+    text-align: center;
+    padding: 2rem 0;
+
+    &--error {
+      color: #ff6666;
+    }
+  }
+
+  // ─── Info de la canción ───────────────────────────────────────────
+  &__track-info {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+  }
+
+  &__cover {
+    width: 6rem;
+    height: 6rem;
+    object-fit: cover;
+    border-radius: 0.4rem;
+    flex-shrink: 0;
+    background: #333;
+  }
+
+  &__meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    min-width: 0;
+  }
+
+  &__name {
+    color: white;
+    font-family: $xp-font;
+    font-size: 1.3rem;
+    font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__artist {
+    color: #888;
+    font-family: $xp-font;
+    font-size: 1.1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  // ─── Barra de progreso ────────────────────────────────────────────
+  &__progress {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+  }
+
+  &__time {
+    color: #666;
+    font-family: $xp-font;
+    font-size: 1rem;
+    flex-shrink: 0;
+    min-width: 3.5rem;
+
+    &:last-child {
+      text-align: right;
+    }
+  }
+
+  // input range arrastrable para seek
+  &__bar {
+    flex: 1;
+    accent-color: #4a6fff;
+    cursor: pointer;
+    height: 0.4rem;
+  }
+
+  // ─── Controles ────────────────────────────────────────────────────
+  &__controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.6rem;
+  }
+
+  &__btn {
+    background: none;
+    border: none;
+    color: #aaa;
+    font-size: 1.8rem;
+    cursor: pointer;
+    padding: 0.4rem;
+    line-height: 1;
+    transition: color 150ms ease;
+
+    &:hover {
+      color: white;
+    }
+
+    &--play {
+      font-size: 2.4rem;
+      color: white;
+    }
+  }
+
+  // ─── Volumen ──────────────────────────────────────────────────────
+  &__volume {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+  }
+
+  &__volume-icon {
+    font-size: 1.4rem;
+    flex-shrink: 0;
+  }
+
+  &__volume-slider {
+    flex: 1;
+    accent-color: #4a6fff;
+    cursor: pointer;
+  }
+
+  &__volume-label {
+    color: #666;
+    font-family: $xp-font;
+    font-size: 1rem;
+    min-width: 3rem;
+    text-align: right;
+  }
+}

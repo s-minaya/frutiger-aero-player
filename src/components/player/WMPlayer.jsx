@@ -40,6 +40,7 @@ import "./WMPlayer.scss";
 const WMPlayer = forwardRef(function WMPlayer({ onClose, isPremium }, ref) {
   const [activeTab, setActiveTab] = useState("search");
   const {
+    player,
     deviceId,
     playerState,
     loading: sdkLoading,
@@ -91,12 +92,17 @@ const WMPlayer = forwardRef(function WMPlayer({ onClose, isPremium }, ref) {
 
           {/* Playlists — isPremium controla si se muestra el contenido
             o el mensaje de "requiere Premium" dentro del componente */}
-          {activeTab === "playlists" && <PlaylistPanel isPremium={isPremium} />}
+          <div
+            style={{ display: activeTab === "playlists" ? "block" : "none" }}
+          >
+            <PlaylistPanel isPremium={isPremium} />
+          </div>
 
           {/* Player — pendiente de implementar en Fase 5
             Integrará el Web Playback SDK de Spotify */}
           {activeTab === "player" && (
             <PlayerPanel
+              player={player}
               deviceId={deviceId}
               playerState={playerState}
               sdkLoading={sdkLoading}

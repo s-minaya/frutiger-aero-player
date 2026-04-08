@@ -1,35 +1,30 @@
 /**
- * Panel de reproducción del WMPlayer
+ * PlayerPanel.jsx — Panel de reproducción del WMPlayer
  *
  * Conecta dos piezas:
  * - PlayerContext: sabe QUÉ canción reproducir (currentTrack, queue)
- * - Props de WMPlayer: sabe EN QUÉ dispositivo reproducir (deviceId)
+ * - Props de WMPlayer: sabe EN QUÉ dispositivo reproducir (deviceId, player)
  *
- * Por qué deviceId viene como prop y no de useSpotifyPlayer directamente:
+ * Por qué deviceId y player vienen como props y no de useSpotifyPlayer:
  * useSpotifyPlayer vive en WMPlayer para que el SDK no se desmonte
- * al cambiar de tab. PlayerPanel recibe deviceId como prop para
- * poder usarlo sin reinicializar el SDK.
+ * al cambiar de tab. PlayerPanel recibe estos valores como props para
+ * poder usarlos sin reinicializar el SDK.
  *
- * Cuando currentTrack cambia (usuario hace click en una canción desde
- * SearchPanel o PlaylistPanel), el useEffect reproduce la canción en
- * el dispositivo del SDK. La navegación siguiente/anterior se gestiona
- * en PlayerProvider con nextTrack() y previousTrack() que mantienen
- * la queue local sincronizada.
+ * Progreso de la canción:
+ * El SDK solo actualiza playerState en eventos puntuales (play, pause...).
+ * Para tener un progreso fluido usamos un estado local `position` que
+ * avanza cada segundo con un intervalo. playerState.position se usa
+ * como fuente de verdad cuando está disponible (displayPosition).
  *
  * Props:
- * - deviceId: ID del dispositivo del SDK — necesario para playTrackOnDevice
- * - playerState: estado de reproducción del SDK (posición, pausa...)
+ * - player: objeto Player del SDK — necesario para seek (arrastrar barra)
+ * - deviceId: ID del dispositivo — necesario para playTrackOnDevice
+ * - playerState: estado del SDK (posición, pausa...)
  * - sdkLoading: true mientras el SDK se está inicializando
  * - sdkError: mensaje de error si el SDK falla
- *
- * Estados visuales:
- * - SDK cargando: mensaje de conexión
- * - Error del SDK: mensaje de error
- * - Sin canción seleccionada: mensaje invitando a elegir una
- * - Reproduciendo: portada, título, artista, controles, progreso, volumen
  */
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { usePlayer } from "../../hooks/usePlayer.js";
 import {
   playTrackOnDevice,
@@ -37,9 +32,11 @@ import {
   resumePlayback,
   setPlayerVolume,
 } from "../../api/player.js";
+import { formatDuration } from "../../utils/formatDuration.js";
 import "./PlayerPanel.scss";
 
 export default function PlayerPanel({
+  player,
   deviceId,
   playerState,
   sdkLoading,
@@ -55,17 +52,20 @@ export default function PlayerPanel({
     previousTrack,
   } = usePlayer();
 
+  // Progreso local en ms — avanza cada segundo con el intervalo de abajo.
+  // No usamos playerState.position directamente porque solo se actualiza
+  // en eventos puntuales y la barra quedaría congelada entre eventos.
+  const [position, setPosition] = useState(0);
+
+  // Duración total de la canción en ms
+  const duration = currentTrack?.duration_ms ?? 0;
+
+  // Posición a mostrar — playerState.position como fuente de verdad
+  // cuando está disponible, estado local entre eventos
+  const displayPosition = playerState?.position ?? position;
+
   /**
    * Cuando currentTrack cambia, reproducimos la canción en el SDK.
-   *
-   * Por qué useEffect y no onClick:
-   * playTrack() se puede llamar desde SearchPanel, PlaylistPanel, o
-   * en el futuro desde cualquier otro sitio. El efecto reacciona al
-   * cambio de currentTrack independientemente de dónde venga.
-   *
-   * La dependencia [currentTrack, deviceId] asegura que:
-   * - Se ejecuta cuando cambia la canción
-   * - Espera a tener el deviceId antes de intentar reproducir
    */
   useEffect(() => {
     if (!currentTrack || !deviceId) return;
@@ -75,11 +75,32 @@ export default function PlayerPanel({
   }, [currentTrack, deviceId]);
 
   /**
-   * Sincronizamos el estado isPlaying del contexto con el SDK.
-   * El SDK es la fuente de verdad — cuando playerState cambia
-   * (el usuario pausa desde otro dispositivo, por ejemplo)
-   * podríamos sincronizar aquí en el futuro.
+   * Avanza el progreso local cada segundo mientras se reproduce.
+   *
+   * player_state_changed del SDK solo se dispara en eventos puntuales
+   * — no en tiempo real. Por eso avanzamos position localmente.
+   *
+   * También detecta cuándo termina la canción y avanza automáticamente.
    */
+  useEffect(() => {
+    if (!isPlaying || !currentTrack) return;
+
+    const interval = setInterval(() => {
+      setPosition((prev) => {
+        const next = prev + 1000;
+        if (duration > 0 && next >= duration - 1000) {
+          nextTrack();
+          return 0;
+        }
+        return next;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isPlaying, currentTrack, duration, nextTrack]);
+
+  // ── Handlers ──────────────────────────────────────────────────────
+
   async function handleTogglePlay() {
     togglePlay();
     if (isPlaying) {
@@ -101,6 +122,17 @@ export default function PlayerPanel({
     const newVolume = Number(e.target.value) / 100;
     setVolume(newVolume);
     await setPlayerVolume(newVolume);
+  }
+
+  /**
+   * Mueve la reproducción a una posición concreta (seek).
+   * player.seek() acepta ms. Actualizamos position localmente para
+   * que la UI responda inmediatamente.
+   */
+  async function handleSeek(e) {
+    const newPosition = Number(e.target.value);
+    setPosition(newPosition);
+    await player?.seek(newPosition);
   }
 
   // ── Guards de renderizado ──────────────────────────────────────────
@@ -130,17 +162,13 @@ export default function PlayerPanel({
       </div>
     );
 
-  // Extraemos los datos que necesitamos del track
-  const { name, artists, album, duration_ms } = currentTrack;
+  const { name, artists, album } = currentTrack;
   const artistName = artists[0].name;
   const coverUrl = album.images[0]?.url;
 
-  // Progreso actual en ms — viene del playerState del SDK
-  const position = playerState?.position ?? 0;
-  const duration = duration_ms ?? 0;
-
   return (
     <div className="player-panel">
+
       {/* ── Info de la canción ────────────────────────────────────── */}
       <div className="player-panel__track-info">
         <img className="player-panel__cover" src={coverUrl} alt={album.name} />
@@ -150,34 +178,31 @@ export default function PlayerPanel({
         </div>
       </div>
 
-      {/* ── Barra de progreso ─────────────────────────────────────── */}
+      {/* ── Barra de progreso arrastrable ─────────────────────────── */}
+      {/* input range permite arrastrar para hacer seek en ms */}
       <div className="player-panel__progress">
-        <span className="player-panel__time">{formatMs(position)}</span>
-        <div className="player-panel__bar">
-          <div
-            className="player-panel__bar-fill"
-            style={{
-              width: `${duration > 0 ? (position / duration) * 100 : 0}%`,
-            }}
-          />
-        </div>
-        <span className="player-panel__time">{formatMs(duration)}</span>
+        <span className="player-panel__time">{formatDuration(displayPosition)}</span>
+        <input
+          className="player-panel__bar"
+          type="range"
+          min="0"
+          max={duration}
+          value={displayPosition}
+          onChange={handleSeek}
+        />
+        <span className="player-panel__time">{formatDuration(duration)}</span>
       </div>
 
       {/* ── Controles ────────────────────────────────────────────── */}
       <div className="player-panel__controls">
-        <button className="player-panel__btn" onClick={handlePrevious}>
-          ⏮
-        </button>
+        <button className="player-panel__btn" onClick={handlePrevious}>⏮</button>
         <button
           className="player-panel__btn player-panel__btn--play"
           onClick={handleTogglePlay}
         >
           {isPlaying ? "⏸" : "▶"}
         </button>
-        <button className="player-panel__btn" onClick={handleNext}>
-          ⏭
-        </button>
+        <button className="player-panel__btn" onClick={handleNext}>⏭</button>
       </div>
 
       {/* ── Volumen ───────────────────────────────────────────────── */}
@@ -195,14 +220,14 @@ export default function PlayerPanel({
           {Math.round(volume * 100)}%
         </span>
       </div>
+
     </div>
   );
 }
 
 /**
  * Convierte milisegundos a formato mm:ss para mostrar el progreso.
- * Similar a formatDuration de utils/ pero local a este componente
- * porque solo lo usa PlayerPanel.
+ * Local a este componente porque solo lo usa PlayerPanel.
  */
 function formatMs(ms) {
   const minutes = Math.floor(ms / 60000);
