@@ -60,9 +60,19 @@ export default function PlayerPanel({
   // Duración total de la canción en ms
   const duration = currentTrack?.duration_ms ?? 0;
 
-  // Posición a mostrar — playerState.position como fuente de verdad
-  // cuando está disponible, estado local entre eventos
-  const displayPosition = playerState?.position ?? position;
+  // Sincronizamos position con playerState cuando este cambia (play, pause, seek)
+  const displayPosition = position;
+
+  /**
+   * Sincroniza el estado local con el SDK cuando playerState cambia.
+   * Ocurre en eventos puntuales: nueva canción, play, pause, seek...
+   * Entre eventos el intervalo mantiene el progreso fluido.
+   */
+  useEffect(() => {
+    if (playerState?.position !== undefined) {
+      setPosition(playerState.position);
+    }
+  }, [playerState]);
 
   /**
    * Cuando currentTrack cambia, reproducimos la canción en el SDK.
@@ -168,7 +178,6 @@ export default function PlayerPanel({
 
   return (
     <div className="player-panel">
-
       {/* ── Info de la canción ────────────────────────────────────── */}
       <div className="player-panel__track-info">
         <img className="player-panel__cover" src={coverUrl} alt={album.name} />
@@ -181,7 +190,9 @@ export default function PlayerPanel({
       {/* ── Barra de progreso arrastrable ─────────────────────────── */}
       {/* input range permite arrastrar para hacer seek en ms */}
       <div className="player-panel__progress">
-        <span className="player-panel__time">{formatDuration(displayPosition)}</span>
+        <span className="player-panel__time">
+          {formatDuration(displayPosition)}
+        </span>
         <input
           className="player-panel__bar"
           type="range"
@@ -195,14 +206,18 @@ export default function PlayerPanel({
 
       {/* ── Controles ────────────────────────────────────────────── */}
       <div className="player-panel__controls">
-        <button className="player-panel__btn" onClick={handlePrevious}>⏮</button>
+        <button className="player-panel__btn" onClick={handlePrevious}>
+          ⏮
+        </button>
         <button
           className="player-panel__btn player-panel__btn--play"
           onClick={handleTogglePlay}
         >
           {isPlaying ? "⏸" : "▶"}
         </button>
-        <button className="player-panel__btn" onClick={handleNext}>⏭</button>
+        <button className="player-panel__btn" onClick={handleNext}>
+          ⏭
+        </button>
       </div>
 
       {/* ── Volumen ───────────────────────────────────────────────── */}
@@ -220,7 +235,6 @@ export default function PlayerPanel({
           {Math.round(volume * 100)}%
         </span>
       </div>
-
     </div>
   );
 }

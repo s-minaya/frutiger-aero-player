@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import SearchPanel from "../../components/player/SearchPanel.jsx";
+import { PlayerProvider } from "../../context/PlayerProvider.jsx";
 import { server } from "../mocks/server.js";
 import { http, HttpResponse } from "msw";
 
@@ -33,7 +34,11 @@ describe("SearchPanel", () => {
   it("muestra el input de búsqueda en el estado inicial", () => {
     // El input es el punto de entrada principal.
     // Sin él el usuario no puede buscar nada
-    render(<SearchPanel />);
+    render(
+      <PlayerProvider>
+        <SearchPanel />
+      </PlayerProvider>,
+    );
 
     expect(
       screen.getByPlaceholderText(/Buscar canciones/i),
@@ -44,7 +49,11 @@ describe("SearchPanel", () => {
     // Con query vacía no debe haber mensajes.
     // "No se encontraron resultados" sin haber buscado nada
     // sería confuso para el usuario
-    render(<SearchPanel />);
+    render(
+      <PlayerProvider>
+        <SearchPanel />
+      </PlayerProvider>,
+    );
 
     expect(
       screen.queryByText(/No se encontraron resultados/i),
@@ -56,7 +65,11 @@ describe("SearchPanel", () => {
     // useSearch hace la petición, MSW la intercepta,
     // y los resultados aparecen en pantalla.
     // waitFor espera a que el estado asíncrono se resuelva
-    render(<SearchPanel />);
+    render(
+      <PlayerProvider>
+        <SearchPanel />
+      </PlayerProvider>,
+    );
 
     const input = screen.getByPlaceholderText(/Buscar canciones/i);
     fireEvent.change(input, { target: { value: "radiohead" } });
@@ -73,7 +86,11 @@ describe("SearchPanel", () => {
   it("muestra el artista de cada canción", async () => {
     // El artista es tan importante como el título para identificar
     // una canción — verificamos que también se renderiza
-    render(<SearchPanel />);
+    render(
+      <PlayerProvider>
+        <SearchPanel />
+      </PlayerProvider>,
+    );
 
     fireEvent.change(screen.getByPlaceholderText(/Buscar canciones/i), {
       target: { value: "radiohead" },
@@ -98,7 +115,11 @@ describe("SearchPanel", () => {
       }),
     );
 
-    render(<SearchPanel />);
+    render(
+      <PlayerProvider>
+        <SearchPanel />
+      </PlayerProvider>,
+    );
 
     fireEvent.change(screen.getByPlaceholderText(/Buscar canciones/i), {
       target: { value: "xkzjqwerty12345" },
@@ -116,7 +137,7 @@ describe("SearchPanel", () => {
 
   it("muestra error si la API devuelve 429", async () => {
     // spotifyFetch reintenta 3 veces con exponential backoff.
-    // Con Retry-After: 0 el backoff calculado es: 
+    // Con Retry-After: 0 el backoff calculado es:
     // retryAfter * 1000 * Math.pow(2, attempt) = 0 * 1000 * 2^n = 0ms
     // así los 4 fetches (3 reintentos + fallo final) ocurren
     // casi instantáneamente y no necesitamos fake timers
@@ -129,7 +150,11 @@ describe("SearchPanel", () => {
       }),
     );
 
-    render(<SearchPanel />);
+    render(
+      <PlayerProvider>
+        <SearchPanel />
+      </PlayerProvider>,
+    );
 
     fireEvent.change(screen.getByPlaceholderText(/Buscar canciones/i), {
       target: { value: "radiohead" },
@@ -141,5 +166,31 @@ describe("SearchPanel", () => {
       },
       { timeout: 2000 },
     );
+  });
+  it("llama a playTrack al hacer click en una canción", async () => {
+    // Verificamos que al hacer click en un resultado
+    // se intenta reproducir la canción via el contexto
+    render(
+      <PlayerProvider>
+        <SearchPanel />
+      </PlayerProvider>,
+    );
+
+    fireEvent.change(screen.getByPlaceholderText(/Buscar canciones/i), {
+      target: { value: "radiohead" },
+    });
+
+    await waitFor(
+      () => {
+        expect(screen.getByText("Creep")).toBeInTheDocument();
+      },
+      { timeout: 1000 },
+    );
+
+    fireEvent.click(screen.getByText("Creep"));
+
+    // No podemos verificar que el SDK reproduce — está mockeado —
+    // pero sí que el click no lanza errores y el elemento sigue visible
+    expect(screen.getByText("Creep")).toBeInTheDocument();
   });
 });

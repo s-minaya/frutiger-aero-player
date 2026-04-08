@@ -22,10 +22,10 @@
  *   (el componente se desmonta completamente)
  * - Click en taskbar → toggle de playerOpen (mostrar/ocultar)
  *
- * Tabs:
- * - Buscar → SearchPanel (disponible para todos los usuarios)
- * - Playlists → PlaylistPanel (solo Premium)
- * - Player → controles de reproducción con el Web Playback SDK
+ * Estructura:
+ * - Tabs: Buscar y Playlists para navegar el contenido
+ * - PlayerPanel siempre visible en la parte inferior —
+ *   muestra los controles independientemente del tab activo
  */
 
 import { forwardRef, useState } from "react";
@@ -34,11 +34,16 @@ import PlayerPanel from "./PlayerPanel.jsx";
 import PlaylistPanel from "./PlaylistPanel.jsx";
 import { PlayerProvider } from "../../context/PlayerProvider.jsx";
 import { useSpotifyPlayer } from "../../hooks/useSpotifyPlayer.js";
-
 import "./WMPlayer.scss";
 
 const WMPlayer = forwardRef(function WMPlayer({ onClose, isPremium }, ref) {
+  // Tab activo — solo Buscar y Playlists, Player es siempre visible
   const [activeTab, setActiveTab] = useState("search");
+
+  // El SDK vive aquí — al nivel del WMP, no del PlayerPanel.
+  // Así no se desmonta al cambiar de tab.
+  // player es necesario para seek (arrastrar la barra de progreso).
+  // deviceId es necesario para decirle a Spotify en qué dispositivo reproducir.
   const {
     player,
     deviceId,
@@ -56,8 +61,7 @@ const WMPlayer = forwardRef(function WMPlayer({ onClose, isPremium }, ref) {
           <div className="wmp__title">
             <span className="wmp__title-text">Windows Media Player</span>
           </div>
-          {/* X cierra completamente — desmonta el WMP y lo quita de la taskbar.
-            Diferente al click fuera que solo minimiza (oculta sin desmontar) */}
+          {/* X cierra completamente — desmonta el WMP y lo quita de la taskbar */}
           <button className="wmp__close" onClick={onClose}>
             ✕
           </button>
@@ -77,38 +81,36 @@ const WMPlayer = forwardRef(function WMPlayer({ onClose, isPremium }, ref) {
           >
             Playlists
           </button>
-          <button
-            className={`wmp__tab ${activeTab === "player" ? "wmp__tab--active" : ""}`}
-            onClick={() => setActiveTab("player")}
-          >
-            Player
-          </button>
         </div>
 
         {/* ── Contenido del tab activo ──────────────────────────────────── */}
         <div className="wmp__content">
-          {/* Búsqueda — disponible para todos los usuarios */}
-          {activeTab === "search" && <SearchPanel />}
+          {/* Búsqueda — siempre montada para preservar los resultados
+      al cambiar de tab y volver */}
+          <div style={{ display: activeTab === "search" ? "block" : "none" }}>
+            <SearchPanel />
+          </div>
 
-          {/* Playlists — isPremium controla si se muestra el contenido
-            o el mensaje de "requiere Premium" dentro del componente */}
+          {/* Playlists — siempre montada para no repetir las peticiones */}
           <div
             style={{ display: activeTab === "playlists" ? "block" : "none" }}
           >
             <PlaylistPanel isPremium={isPremium} />
           </div>
+        </div>
 
-          {/* Player — pendiente de implementar en Fase 5
-            Integrará el Web Playback SDK de Spotify */}
-          {activeTab === "player" && (
-            <PlayerPanel
-              player={player}
-              deviceId={deviceId}
-              playerState={playerState}
-              sdkLoading={sdkLoading}
-              sdkError={sdkError}
-            />
-          )}
+        {/* ── Player — siempre visible ──────────────────────────────────── */}
+        {/* Separado del contenido de tabs para que sea persistente.
+            El usuario puede buscar o navegar playlists mientras ve
+            qué canción está sonando y controla la reproducción */}
+        <div className="wmp__player">
+          <PlayerPanel
+            player={player}
+            deviceId={deviceId}
+            playerState={playerState}
+            sdkLoading={sdkLoading}
+            sdkError={sdkError}
+          />
         </div>
       </div>
     </PlayerProvider>
