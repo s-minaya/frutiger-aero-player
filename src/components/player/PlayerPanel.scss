@@ -5,6 +5,7 @@
   flex-direction: column;
   gap: 1.6rem;
   padding: 0.8rem;
+  
 
   // ─── Estado vacío ─────────────────────────────────────────────────
   &__status {
@@ -68,6 +69,7 @@
     gap: 0.8rem;
   }
 
+
   &__time {
     color: #666;
     font-family: $xp-font;
@@ -84,8 +86,11 @@
   &__bar {
     flex: 1;
     accent-color: #4a6fff;
-    cursor: pointer;
+    cursor: grab;
     height: 0.4rem;
+  }
+    &__bar:active {
+    cursor: grabbing;
   }
 
   // ─── Controles ────────────────────────────────────────────────────
@@ -131,7 +136,10 @@
   &__volume-slider {
     flex: 1;
     accent-color: #4a6fff;
-    cursor: pointer;
+    cursor: grab;
+  }
+  &__volume-slider:active {
+    cursor: grabbing;
   }
 
   &__volume-label {

@@ -22,13 +22,19 @@
  *   (el componente se desmonta completamente y la música para)
  * - Click en taskbar → toggle de playerOpen (mostrar/ocultar)
  *
+ * Drag:
+ * La posición del WMP se gestiona localmente con estado {x, y}.
+ * Se usa Pointer Events API en vez de mouse/touch por separado —
+ * funciona tanto en escritorio como en móvil con el mismo código.
+ * El drag se inicia desde la barra de título.
+ *
  * Estructura:
  * - Tabs: Buscar y Playlists para navegar el contenido
  * - PlayerPanel siempre visible en la parte inferior —
  *   muestra los controles independientemente del tab activo
  */
 
-import { forwardRef, useState } from "react";
+import { forwardRef, useState, useCallback, useRef } from "react";
 import SearchPanel from "./SearchPanel.jsx";
 import PlayerPanel from "./PlayerPanel.jsx";
 import PlaylistPanel from "./PlaylistPanel.jsx";
@@ -40,13 +46,19 @@ const WMPlayer = forwardRef(function WMPlayer(
   { onClose, isPremium, isVisible },
   ref,
 ) {
-  // Tab activo — solo Buscar y Playlists, Player es siempre visible
   const [activeTab, setActiveTab] = useState("search");
 
-  // El SDK vive aquí — al nivel del WMP, no del PlayerPanel.
-  // Así no se desmonta al cambiar de tab.
-  // player es necesario para seek (arrastrar la barra de progreso).
-  // deviceId es necesario para decirle a Spotify en qué dispositivo reproducir.
+  // Posición del WMP en pantalla — empieza centrado
+  const [pos, setPos] = useState({
+    x: window.innerWidth / 2,
+    y: window.innerHeight / 2,
+  });
+
+  // Offset entre el punto donde se hace pointerdown y la posición actual
+  // del WMP — necesario para que el drag sea relativo al punto de click
+  const dragOffset = useRef({ x: 0, y: 0 });
+  const isDragging = useRef(false);
+
   const {
     player,
     deviceId,
@@ -55,17 +67,74 @@ const WMPlayer = forwardRef(function WMPlayer(
     error: sdkError,
   } = useSpotifyPlayer();
 
+  /**
+   * Inicia el drag al hacer pointerdown en la barra de título.
+   *
+   * Capturamos el pointer para seguir recibiendo eventos aunque
+   * el puntero salga del elemento — sin esto el drag se interrumpe
+   * si el usuario mueve el ratón muy rápido.
+   *
+   * El offset es la diferencia entre donde hizo click el usuario
+   * y la esquina superior izquierda del WMP. Lo usamos en handlePointerMove
+   * para que el WMP no salte al mover el ratón.
+   */
+  const handlePointerDown = useCallback(
+    (e) => {
+      isDragging.current = true;
+      dragOffset.current = {
+        x: e.clientX - pos.x,
+        y: e.clientY - pos.y,
+      };
+      e.currentTarget.setPointerCapture(e.pointerId);
+    },
+    [pos],
+  );
+
+  /**
+   * Actualiza la posición mientras se arrastra.
+   * Solo actúa si isDragging es true.
+   */
+  const handlePointerMove = useCallback((e) => {
+    if (!isDragging.current) return;
+    setPos({
+      x: e.clientX - dragOffset.current.x,
+      y: e.clientY - dragOffset.current.y,
+    });
+  }, []);
+
+  /**
+   * Termina el drag al soltar el pointer.
+   */
+  const handlePointerUp = useCallback(() => {
+    isDragging.current = false;
+  }, []);
+
   return (
     <PlayerProvider>
-      {/* ref expone este nodo DOM a Desktop.jsx para detectar clicks fuera */}
-      <div className={`wmp ${!isVisible ? "wmp--hidden" : ""}`} ref={ref}>
-        {/* ── Barra de título ───────────────────────────────────────────── */}
-        <div className="wmp__titlebar">
+      <div
+        className={`wmp ${!isVisible ? "wmp--hidden" : ""}`}
+        ref={ref}
+        style={{
+          // Posicionamos el WMP con transform para que {x, y} sea el centro
+          left: pos.x,
+          top: pos.y,
+          transform: "translate(-50%, -50%)",
+        }}
+      >
+        {/* ── Barra de título — área de drag ────────────────────────────── */}
+        {/* onPointerDown inicia el drag, onPointerMove lo actualiza,
+            onPointerUp lo termina. Pointer Events funciona en móvil y desktop */}
+        <div
+          className="wmp__titlebar"
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+        >
           <div className="wmp__title">
             <span className="wmp__title-text">Windows Media Player</span>
           </div>
           {/* X cierra completamente — desmonta el WMP y lo quita de la taskbar */}
-          <button className="wmp__close" onClick={onClose}>
+          <button className="wmp__close" onClick={onClose} onPointerDown={(e) => e.stopPropagation()}>
             ✕
           </button>
         </div>
@@ -88,8 +157,7 @@ const WMPlayer = forwardRef(function WMPlayer(
 
         {/* ── Contenido del tab activo ──────────────────────────────────── */}
         <div className="wmp__content">
-          {/* Búsqueda — siempre montada para preservar los resultados
-      al cambiar de tab y volver */}
+          {/* Búsqueda — siempre montada para preservar los resultados */}
           <div style={{ display: activeTab === "search" ? "block" : "none" }}>
             <SearchPanel />
           </div>
@@ -103,9 +171,6 @@ const WMPlayer = forwardRef(function WMPlayer(
         </div>
 
         {/* ── Player — siempre visible ──────────────────────────────────── */}
-        {/* Separado del contenido de tabs para que sea persistente.
-            El usuario puede buscar o navegar playlists mientras ve
-            qué canción está sonando y controla la reproducción */}
         <div className="wmp__player">
           <PlayerPanel
             player={player}
