@@ -26,7 +26,7 @@ import { formatDuration } from "../../utils/formatDuration.js";
 import { usePlayer } from "../../hooks/usePlayer.js";
 import "./SearchPanel.scss";
 
-export default function SearchPanel() {
+export default function SearchPanel({ onPlay }) {
   const { query, setQuery, results, loading, error } = useSearch();
   const { playTrack } = usePlayer();
 
@@ -72,7 +72,10 @@ export default function SearchPanel() {
           <li
             key={track.id}
             className="search-panel__track"
-            onClick={() => playTrack(track, results)}
+            onClick={() => {
+              playTrack(track, results);
+              onPlay?.();
+            }}
           >
             {/* images[2] = miniatura 64px — Spotify devuelve tres tamaños:
                 [0]=640px, [1]=300px, [2]=64px. Usamos el más pequeño

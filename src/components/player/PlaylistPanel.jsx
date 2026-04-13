@@ -33,7 +33,7 @@ import { formatDuration } from "../../utils/formatDuration.js";
 import { usePlayer } from "../../hooks/usePlayer.js";
 import "./PlaylistPanel.scss";
 
-export default function PlaylistPanel({ isPremium }) {
+export default function PlaylistPanel({ isPremium, onPlay }) {
   const { playlists, loading, error } = usePlaylists();
   const { playTrack } = usePlayer();
 
@@ -181,7 +181,10 @@ export default function PlaylistPanel({ isPremium }) {
                 <li
                   key={item.id}
                   className="playlist-panel__item"
-                  onClick={() => playTrack(item, trackQueue)}
+                  onClick={() => {
+                    playTrack(item, trackQueue);
+                    onPlay?.();
+                  }}
                 >
                   {/* images[2] = miniatura 64px — igual que en SearchPanel */}
                   <img

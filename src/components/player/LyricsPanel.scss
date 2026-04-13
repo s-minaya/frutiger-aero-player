@@ -1,0 +1,68 @@
+@use '../../styles/variables' as *;
+
+.lyrics-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+
+  // ─── Botón volver ─────────────────────────────────────────────────
+  &__back {
+    align-self: flex-start;
+    background: none;
+    border: none;
+    color: #6a9fff;
+    font-family: $xp-font;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  // ─── Info canción ─────────────────────────────────────────────────
+  &__track {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  &__title {
+    color: white;
+    font-family: $xp-font;
+    font-size: 1.3rem;
+    font-weight: bold;
+  }
+
+  &__artist {
+    color: #888;
+    font-family: $xp-font;
+    font-size: 1.1rem;
+  }
+
+  // ─── Estados ──────────────────────────────────────────────────────
+  &__status {
+    color: #888;
+    font-family: $xp-font;
+    font-size: 1.2rem;
+    text-align: center;
+    padding: 1rem 0;
+
+    &--error {
+      color: #ff6666;
+    }
+  }
+
+  // ─── Letra ────────────────────────────────────────────────────────
+  // pre para respetar los saltos de línea originales de la letra
+  &__lyrics {
+    color: #ddd;
+    font-family: $xp-font;
+    font-size: 1.2rem;
+    line-height: 1.8;
+    white-space: pre-wrap; // respeta saltos de línea pero hace wrap
+    overflow-y: auto;
+    max-height: 25rem;
+  }
+}

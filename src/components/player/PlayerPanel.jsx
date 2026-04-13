@@ -70,6 +70,7 @@ export default function PlayerPanel({
    */
   useEffect(() => {
     if (playerState?.position !== undefined) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPosition(playerState.position);
     }
   }, [playerState]);

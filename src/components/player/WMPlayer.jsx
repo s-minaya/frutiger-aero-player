@@ -38,6 +38,7 @@ import { forwardRef, useState, useCallback, useRef } from "react";
 import SearchPanel from "./SearchPanel.jsx";
 import PlayerPanel from "./PlayerPanel.jsx";
 import PlaylistPanel from "./PlaylistPanel.jsx";
+import LyricsPanel from "./LyricsPanel.jsx";
 import { PlayerProvider } from "../../context/PlayerProvider.jsx";
 import { useSpotifyPlayer } from "../../hooks/useSpotifyPlayer.js";
 import "./WMPlayer.scss";
@@ -47,6 +48,11 @@ const WMPlayer = forwardRef(function WMPlayer(
   ref,
 ) {
   const [activeTab, setActiveTab] = useState("search");
+
+  // Vista actual — 'tabs' muestra búsqueda/playlists, 'lyrics' muestra la letra.
+  // backTab recuerda desde qué tab se abrió la letra para volver al correcto.
+  const [view, setView] = useState("tabs");
+  const [backTab, setBackTab] = useState("search");
 
   // Posición del WMP en pantalla — empieza centrado
   const [pos, setPos] = useState({
@@ -109,6 +115,23 @@ const WMPlayer = forwardRef(function WMPlayer(
     isDragging.current = false;
   }, []);
 
+  /**
+   * Cambia a la vista de letra guardando desde qué tab venimos.
+   * Se llama desde SearchPanel y PlaylistPanel cuando el usuario
+   * hace click en una canción.
+   */
+  function showLyrics() {
+    setBackTab(activeTab);
+    setView("lyrics");
+  }
+
+  /**
+   * Vuelve a la vista de tabs desde la letra.
+   */
+  function hideLyrics() {
+    setView("tabs");
+  }
+
   return (
     <PlayerProvider>
       <div
@@ -134,39 +157,63 @@ const WMPlayer = forwardRef(function WMPlayer(
             <span className="wmp__title-text">Windows Media Player</span>
           </div>
           {/* X cierra completamente — desmonta el WMP y lo quita de la taskbar */}
-          <button className="wmp__close" onClick={onClose} onPointerDown={(e) => e.stopPropagation()}>
+          <button
+            className="wmp__close"
+            onClick={onClose}
+            onPointerDown={(e) => e.stopPropagation()}
+          >
             ✕
           </button>
         </div>
 
-        {/* ── Navegación por tabs ───────────────────────────────────────── */}
-        <div className="wmp__tabs">
-          <button
-            className={`wmp__tab ${activeTab === "search" ? "wmp__tab--active" : ""}`}
-            onClick={() => setActiveTab("search")}
-          >
-            Buscar
-          </button>
-          <button
-            className={`wmp__tab ${activeTab === "playlists" ? "wmp__tab--active" : ""}`}
-            onClick={() => setActiveTab("playlists")}
-          >
-            Playlists
-          </button>
-        </div>
+        {/* ── Navegación por tabs — oculta en vista letra ───────────────── */}
+        {view === "tabs" && (
+          <div className="wmp__tabs">
+            <button
+              className={`wmp__tab ${activeTab === "search" ? "wmp__tab--active" : ""}`}
+              onClick={() => setActiveTab("search")}
+            >
+              Buscar
+            </button>
+            <button
+              className={`wmp__tab ${activeTab === "playlists" ? "wmp__tab--active" : ""}`}
+              onClick={() => setActiveTab("playlists")}
+            >
+              Playlists
+            </button>
+          </div>
+        )}
 
-        {/* ── Contenido del tab activo ──────────────────────────────────── */}
+        {/* ── Contenido ─────────────────────────────────────────────────── */}
         <div className="wmp__content">
-          {/* Búsqueda — siempre montada para preservar los resultados */}
-          <div style={{ display: activeTab === "search" ? "block" : "none" }}>
-            <SearchPanel />
+          {/* Vista de letra */}
+          {view === "lyrics" && isPremium && (
+            <LyricsPanel
+              onBack={hideLyrics}
+              backLabel={
+                backTab === "search" ? "Volver a búsqueda" : "Volver a playlist"
+              }
+            />
+          )}
+
+          {/* Búsqueda — siempre montada */}
+          <div
+            style={{
+              display:
+                view === "tabs" && activeTab === "search" ? "block" : "none",
+            }}
+          >
+            <SearchPanel onPlay={showLyrics} />
           </div>
 
-          {/* Playlists — siempre montada para no repetir las peticiones */}
+          {/* Playlists — siempre montada, conserva selectedPlaylist al volver */}
           <div
-            style={{ display: activeTab === "playlists" ? "block" : "none" }}
+            style={{
+              display:
+                view === "tabs" && activeTab === "playlists" ? "block" : "none",
+            }}
           >
-            <PlaylistPanel isPremium={isPremium} />
+            <PlaylistPanel isPremium={isPremium} onPlay={showLyrics} />
           </div>
         </div>
 
